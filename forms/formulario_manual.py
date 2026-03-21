@@ -1,7 +1,7 @@
 from playwright.sync_api import Page
 
 from exceptions import FormsError
-from forms.formulario_base import construir_base_data, completar_campos_base, esperar_formulario_listo
+from forms.formulario_base import construir_base_data, completar_campos_base, esperar_formulario_listo, esperar_envio_manual
 from models import PaseData, ManualFormData
 
 
@@ -63,11 +63,23 @@ def completar_formulario_manual(page: Page, forms_url: str, pase: PaseData) -> N
         page.wait_for_selector('[role="listbox"]', state="visible")
         page.click(f'[role="option"]:has-text("{manual_data.bd}")')
 
-        # Input 11 — Nuevas tablas (radio button → "No")
+        # Input 11 — Nuevas tablas (radio button → "No") y esperar inputs 12-13
         page.click(f'input[name="r491dc438942441a396ae7bc7174341aa"][value="{manual_data.nuevas_tablas}"]')
 
-        # 5. Submit
-        page.click('button[data-automation-id="submitButton"]')
+        # Input 12 — Ruta scripts BD (si aplica)
+        if pase.ruta_scripts:
+            page.wait_for_selector(
+                'input[aria-labelledby*="QuestionId_rcf18a944445b43f8a2910e53e0a6d10a"]',
+                state="visible",
+                timeout=10_000,
+            )
+            page.fill(
+                'input[aria-labelledby*="QuestionId_rcf18a944445b43f8a2910e53e0a6d10a"]',
+                pase.ruta_scripts,
+            )
+
+        # 5. Esperar envío manual — el usuario revisa y hace clic en Enviar
+        esperar_envio_manual(page)
 
     except Exception as e:
         raise FormsError(f"Error en formulario Manual: {e}") from e

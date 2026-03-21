@@ -148,6 +148,9 @@ def _ejecutar_pase(
         total = len(pase.artefactos)
         for i, artefacto in enumerate(pase.artefactos, 1):
             try:
+                mostrar_progreso(
+                    f"⏳ Completando formulario DevOps {i}/{total} ({artefacto.codigo})..."
+                )
                 completar_formulario_devops(
                     page, pase.forms_url, pase, artefacto, artefactos_idx
                 )
@@ -162,6 +165,7 @@ def _ejecutar_pase(
 
     if pase.caso in (Caso.DOS, Caso.TRES):
         try:
+            mostrar_progreso("⏳ Completando formulario Manual...")
             completar_formulario_manual(page, pase.forms_url, pase)
             mostrar_progreso("✓ Formulario Manual enviado")
         except FormsError as e:
@@ -217,4 +221,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from tui_app import TUIApp
+    TUIApp().run()

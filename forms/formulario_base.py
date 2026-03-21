@@ -64,6 +64,29 @@ def esperar_formulario_listo(page, forms_url: str) -> None:
     page.wait_for_selector(_SELECTOR_FECHA, state="visible", timeout=_FORMS_LOAD_TIMEOUT_MS)
 
 
+def esperar_envio_manual(page, timeout_ms: int = 300_000) -> None:
+    """Espera a que el usuario haga clic en Enviar manualmente.
+
+    Detecta la pantalla de confirmación de Microsoft Forms usando el
+    elemento data-automation-id="submitAnother" que aparece tras el envío.
+
+    Args:
+        timeout_ms: Tiempo máximo de espera (default 5 minutos).
+
+    Raises:
+        FormsError: Si el usuario no envía el formulario en el tiempo dado.
+    """
+    from exceptions import FormsError
+    try:
+        page.wait_for_selector(
+            '[data-automation-id="submitAnother"]',
+            state="visible",
+            timeout=timeout_ms,
+        )
+    except Exception as e:
+        raise FormsError(f"Timeout esperando envío manual del formulario: {e}") from e
+
+
 def construir_base_data(pase: PaseData, codigo_artefacto: str) -> BaseFormData:
     """Funcion pura. Construye los datos para los campos comunes del formulario."""
     return BaseFormData(

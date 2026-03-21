@@ -1,0 +1,255 @@
+/* ============================================================
+   tui_app.tcss — Estilos globales para la TUI de Pases a Producción
+   Paleta: Catppuccin Mocha-inspired dark theme
+   ============================================================ */
+
+/* ── Variables de color ─────────────────────────────────────── */
+$background:   #1e1e2e;
+$surface:      #313244;
+$overlay:      #45475a;
+$text:         #cdd6f4;
+$subtext:      #a6adc8;
+$green:        #a6e3a1;
+$red:          #f38ba8;
+$yellow:       #f9e2af;
+$blue:         #89b4fa;
+$lavender:     #b4befe;
+
+/* ── Base ───────────────────────────────────────────────────── */
+Screen {
+    background: $background;
+    color: $text;
+}
+
+Header {
+    background: $surface;
+    color: $lavender;
+    text-style: bold;
+}
+
+Footer {
+    background: $surface;
+    color: $subtext;
+}
+
+/* ── PantallaBienvenida ─────────────────────────────────────── */
+Middle {
+    align: center middle;
+    width: 1fr;
+    height: 1fr;
+}
+
+Center {
+    align: center middle;
+    width: auto;
+    height: auto;
+    padding: 2 4;
+}
+
+#titulo {
+    text-style: bold;
+    color: $lavender;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+    /* Textual no soporta font-size, pero podemos usar padding para dar peso visual */
+}
+
+#descripcion {
+    color: $subtext;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 2;
+}
+
+/* ── PantallaFormulario ─────────────────────────────────────── */
+#form_container {
+    padding: 1 2;
+    width: 100%;
+    height: auto;
+}
+
+#form_titulo {
+    text-style: bold;
+    color: $lavender;
+    padding-bottom: 1;
+    width: 100%;
+}
+
+#form_container Label {
+    color: $subtext;
+    padding-top: 1;
+}
+
+#form_container Input {
+    background: $surface;
+    border: tall $overlay;
+    color: $text;
+    width: 100%;
+}
+
+#form_container Input:focus {
+    border: tall $blue;
+}
+
+#form_container Select {
+    background: $surface;
+    border: tall $overlay;
+    color: $text;
+    width: 100%;
+}
+
+#form_container Select:focus {
+    border: tall $blue;
+}
+
+.error-label {
+    color: $red;
+    height: 1;
+    padding: 0;
+}
+
+#lbl_caso {
+    color: $blue;
+    text-style: italic;
+    padding-top: 1;
+}
+
+#botones {
+    padding-top: 2;
+    height: auto;
+    align: left middle;
+}
+
+/* ── WidgetArtefactos ───────────────────────────────────────── */
+
+#btn_agregar {
+    margin-top: 1;
+    width: auto;
+}
+
+#contenedor_filas {
+    height: auto;
+    min-height: 1;
+}
+
+/* ── PantallaProgreso ───────────────────────────────────────── */
+#progreso_container {
+    padding: 1 2;
+    width: 100%;
+    height: 1fr;
+}
+
+#lbl_paso_actual {
+    color: $blue;
+    text-style: italic;
+    height: 1;
+    padding-bottom: 1;
+}
+
+#log_progreso {
+    background: $surface;
+    border: round $overlay;
+    height: 1fr;
+    width: 100%;
+    padding: 0 1;
+}
+
+LoadingIndicator {
+    height: 1;
+    color: $blue;
+}
+
+/* ── PantallaResumen ────────────────────────────────────────── */
+#resumen_container {
+    padding: 2 4;
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+#resumen_titulo {
+    text-style: bold;
+    color: $lavender;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+}
+
+#lbl_estado {
+    text-style: bold;
+    text-align: center;
+    width: 100%;
+    padding: 1 0;
+}
+
+.estado-ok {
+    color: $green;
+}
+
+.estado-error {
+    color: $yellow;
+}
+
+.error-item {
+    color: $red;
+    padding-left: 2;
+}
+
+#lbl_errores_titulo {
+    color: $subtext;
+    text-style: bold;
+    padding-top: 1;
+}
+
+#lbl_sin_errores {
+    color: $green;
+    padding-left: 2;
+}
+
+#lbl_ruta_log {
+    color: $subtext;
+    text-style: italic;
+    padding-top: 1;
+}
+
+#botones_resumen {
+    padding-top: 2;
+    height: auto;
+    align: center top;
+}
+
+/* ── Botones globales ───────────────────────────────────────── */
+Button {
+    margin: 0 1;
+}
+
+Button.-primary, Button.primary {
+    background: $blue;
+    color: $background;
+}
+
+Button.-success, Button.success {
+    background: $green;
+    color: $background;
+}
+
+Button.-error, Button.error {
+    background: $red;
+    color: $background;
+}
+
+Button.-default, Button.default {
+    background: $overlay;
+    color: $text;
+}
+
+Button:hover {
+    text-style: bold;
+}
+
+/* ── Colores semánticos (clases utilitarias) ────────────────── */
+.color-success { color: $green; }
+.color-error   { color: $red; }
+.color-warning { color: $yellow; }
+.color-info    { color: $blue; }

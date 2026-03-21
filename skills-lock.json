@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "textual": {
+      "source": "johnlarkin1/claude-code-extensions",
+      "sourceType": "github",
+      "computedHash": "4c44b933c72940f53f2e0264245bfe25fbc8f1de8ef3ddbc4ddbef6cb7ebdb77"
+    }
+  }
+}
