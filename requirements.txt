@@ -1,0 +1,2 @@
+playwright==1.49.1
+hypothesis==6.123.4
