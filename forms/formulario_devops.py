@@ -1,7 +1,7 @@
 from playwright.sync_api import Page
 
 from exceptions import FormsError
-from forms.formulario_base import construir_base_data, completar_campos_base, esperar_formulario_listo
+from forms.formulario_base import construir_base_data, completar_campos_base, esperar_formulario_listo, esperar_envio_manual
 from models import PaseData, ArtefactoInput, DevOpsFormData
 
 
@@ -134,8 +134,8 @@ def completar_formulario_devops(
         # Input 18 — Cambios BD (radio button → "No")
         page.click('input[name="rab53491496864b1487df1c2ad32ed5aa"][value="No"]')
 
-        # 5. Submit
-        page.click('button[data-automation-id="submitButton"]')
+        # 5. Esperar envío manual — el usuario revisa y hace clic en Enviar
+        esperar_envio_manual(page)
 
     except Exception as e:
         raise FormsError(f"Error en formulario DevOps ({artefacto.codigo}): {e}") from e
