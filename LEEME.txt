@@ -1,0 +1,14 @@
+1.- instalar pyhton: https://www.python.org/downloads/windows/
+2.- instalar librería playwright en entorno: pip install playwright
+3.- instalar librería textual en entorno: pip install textual
+4.- instalar browser que usará playwright: playwright install
+5.- si el paso 4 falla por permisos, proxy o la vpn te restringe, vamos a tener que copiar unos archivos que están en el rar "ms-playwright.rar"
+dentro de la carpeta "C:\Users\TU_USUARIO\AppData\Local\ms-playwright"
+
+abre una terminal cmd apuntando a la raíz de esta carpeta y escribe "python main.py" y le das enter
+
+disfruta!!!
+
+uso exclusivo para personal interno
+
+Equipo SICO
