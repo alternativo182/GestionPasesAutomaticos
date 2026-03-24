@@ -65,8 +65,8 @@ def test_property_11_campos_base_correctos(fecha, opcion_ejecucion, texto_hu, co
     assert result.codigo_artefacto == codigo
 
     # Manual: codigo_artefacto = ""
-    result_manual = construir_base_data(pase, "")
-    assert result_manual.codigo_artefacto == ""
+    result_manual = construir_base_data(pase, "SICO")
+    assert result_manual.codigo_artefacto == "SICO"
 
 
 # ---------------------------------------------------------------------------

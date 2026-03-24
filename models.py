@@ -39,7 +39,7 @@ class BaseFormData:
     fecha: str
     opcion_ejecucion: str
     texto_hu: str
-    codigo_artefacto: str   # vacío "" para formulario Manual
+    codigo_artefacto: str   # vacío "SICO" para formulario Manual
 
 
 @dataclass

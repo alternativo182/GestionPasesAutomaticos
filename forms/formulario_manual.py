@@ -37,7 +37,7 @@ def completar_formulario_manual(page: Page, forms_url: str, pase: PaseData) -> N
         esperar_formulario_listo(page, forms_url)
 
         # 2. Completar campos base (inputs 1-8) con codigo_artefacto=""
-        base_data = construir_base_data(pase, "")
+        base_data = construir_base_data(pase, "SICO")
         completar_campos_base(page, base_data)
 
         # 3. Input 9 — Método pase: seleccionar "Manual" y esperar inputs 10-11
