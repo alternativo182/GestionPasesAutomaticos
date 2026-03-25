@@ -7,8 +7,12 @@ echo.
 rem Cambiar al directorio del script
 cd /d "%~dp0"
 
+rem Obtener versión actual de update_checker.py
+for /f "tokens=2 delims== " %%a in ('findstr "__version__" "utils\update_checker.py"') do set CURRENT_VERSION=%%a
+set CURRENT_VERSION=%CURRENT_VERSION:"=%
+
 rem Pedir versión
-set /p VERSION="Ingresá la versión (ej: 1.0.1): "
+set /p VERSION="Ingresá la versión (actual: v%CURRENT_VERSION%): "
 if "%VERSION%"=="" (
     echo ERROR: No se ingresó versión
     pause
