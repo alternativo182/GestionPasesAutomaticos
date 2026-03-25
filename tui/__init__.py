@@ -1,4 +1,4 @@
-APP_TITLE = "Pases a Producción SICO"
+APP_TITLE = "Automatización de pases a producción"
 
 FORMS_URL = (
     "https://forms.office.com/Pages/ResponsePage.aspx?id="

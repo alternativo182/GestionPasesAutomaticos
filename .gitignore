@@ -80,3 +80,7 @@ debug_*.png
 
 # KiRo
 .kiro/
+
+# Archivos rar
+*.rar
+

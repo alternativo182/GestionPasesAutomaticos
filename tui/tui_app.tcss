@@ -253,3 +253,101 @@ Button:hover {
 .color-error   { color: $red; }
 .color-warning { color: $yellow; }
 .color-info    { color: $blue; }
+
+/* ── PantallaConfiguracion ──────────────────────────────────── */
+#config_container {
+    padding: 1 2;
+    width: 100%;
+    height: auto;
+}
+
+#config_container Tabs {
+    background: $surface;
+    margin-bottom: 0;
+}
+
+#nav_botones {
+    margin-bottom: 0;
+}
+
+#lbl_artefactos_titulo {
+    text-style: bold;
+    color: $lavender;
+    padding-bottom: 0;
+}
+
+#lbl_destinatarios_titulo {
+    text-style: bold;
+    color: $lavender;
+    padding-bottom: 0;
+}
+
+#config_container DataTable {
+    background: $surface;
+    border: round $overlay;
+    height: 10;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+#botones_artefactos {
+    padding-top: 0;
+    height: auto;
+    align: left middle;
+}
+
+#botones_destinatarios {
+    padding-top: 0;
+    height: auto;
+    align: left middle;
+}
+
+/* ── Diálogos modales ───────────────────────────────────────── */
+#dialog_container {
+    padding: 2 4;
+    width: 100%;
+    height: auto;
+    align: center top;
+}
+
+#dialog_title {
+    text-style: bold;
+    color: $lavender;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 1;
+}
+
+#dialog_mensaje {
+    color: $text;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 2;
+}
+
+#dialog_container Label {
+    color: $subtext;
+    padding-top: 1;
+}
+
+#dialog_container Input {
+    background: $surface;
+    border: tall $overlay;
+    color: $text;
+    width: 100%;
+}
+
+#dialog_container Input:focus {
+    border: tall $blue;
+}
+
+#dialog_botones {
+    padding-top: 2;
+    height: auto;
+    align: center middle;
+}
+
+/* Clases utilitarias para tabs */
+.tab-content-hidden {
+    display: none;
+}

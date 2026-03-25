@@ -20,12 +20,11 @@ class PantallaBienvenida(Screen):
             Center(
                 Label(APP_TITLE, id="titulo"),
                 Label(
-                    "Automatización de pases a producción SICO.\n"
-                    "Completá el formulario y el sistema enviará el correo\n"
-                    "y completará los formularios DevOps y Manual automáticamente.",
+                    "Completa el formulario y el sistema enviará el correo y completará los formularios automáticamente.",
                     id="descripcion",
                 ),
-                Button("Nuevo Pase", id="btn_nuevo_pase", variant="primary"),
+                Button("Nuevo Pase", id="btn_nuevo_pase", variant="success"),
+                Button("Configuración", id="btn_configuracion", variant="primary"),
                 Button("Salir", id="btn_salir", variant="default"),
             )
         )
@@ -35,8 +34,17 @@ class PantallaBienvenida(Screen):
         if event.button.id == "btn_nuevo_pase":
             from tui.screens.formulario import PantallaFormulario  # noqa: PLC0415
 
-            codigos = list(getattr(self.app, "artefactos_idx", {}).keys())
-            self.app.push_screen(PantallaFormulario(codigos))
+            # Obtener mapeo nombre -> código para el dropdown
+            artefactos_idx = getattr(self.app, "artefactos_idx", {})
+            nombre_a_codigo = {
+                artefactos.get("nombre", codigo): codigo
+                for codigo, artefactos in artefactos_idx.items()
+            }
+            self.app.push_screen(PantallaFormulario(nombre_a_codigo))
+        elif event.button.id == "btn_configuracion":
+            from tui.screens.configuracion import PantallaConfiguracion  # noqa: PLC0415
+
+            self.app.push_screen(PantallaConfiguracion())
         elif event.button.id == "btn_salir":
             self.app.exit()
 

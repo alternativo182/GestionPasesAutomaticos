@@ -11,6 +11,7 @@ from exceptions import ValidationError
 from main import FORMS_URL, determinar_caso
 from models import ArtefactoInput, PaseData
 from tui.widgets.artefactos_widget import WidgetArtefactos
+from utils.config_loader import cargar_destinatarios
 
 
 _OPCIONES_EJECUCION = [("Inmediata", "Inmediata"), ("Programada", "Programada")]
@@ -53,9 +54,9 @@ class PantallaFormulario(Screen):
         ("escape", "volver", "Volver"),
     ]
 
-    def __init__(self, codigos: list[str] | None = None) -> None:
+    def __init__(self, nombre_a_codigo: dict[str, str] | None = None) -> None:
         super().__init__()
-        self._codigos: list[str] = codigos or []
+        self._nombre_a_codigo: dict[str, str] = nombre_a_codigo or {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -76,16 +77,24 @@ class PantallaFormulario(Screen):
                 yield Label("", id="lbl_error_fecha", classes="error-label")
 
                 yield Label("Opción de Ejecución *")
-                yield Select(_OPCIONES_EJECUCION, prompt="Seleccionar opción", id="sel_ejecucion")
+                yield Select(
+                    _OPCIONES_EJECUCION, prompt="Seleccionar opción", id="sel_ejecucion"
+                )
 
                 yield Label("Artefactos")
-                yield WidgetArtefactos(self._codigos, id="widget_artefactos")
+                yield WidgetArtefactos(
+                    list(self._nombre_a_codigo.keys()),
+                    self._nombre_a_codigo,
+                    id="widget_artefactos",
+                )
                 yield Label("", id="lbl_error_artefactos", classes="error-label")
 
                 yield Label("Ruta Scripts BD (opcional)")
-                yield Input(placeholder="Ruta a los scripts de base de datos", id="inp_scripts")
+                yield Input(
+                    placeholder="Ruta a los scripts de base de datos", id="inp_scripts"
+                )
 
-                yield Label("Caso detectado: —", id="lbl_caso")
+                yield Label("Tipo pase: ", id="lbl_caso")
 
                 with Horizontal(id="botones"):
                     yield Button("Iniciar Pase", id="btn_iniciar", variant="success")
@@ -101,17 +110,41 @@ class PantallaFormulario(Screen):
     def on_select_changed(self, event: Select.Changed) -> None:
         self._actualizar_caso()
 
+    def on_widget_artefactos_cambio(self, event: WidgetArtefactos.Cambio) -> None:
+        """Se dispara cuando se agrega o elimina un artefacto."""
+        self._actualizar_caso()
+
     def _actualizar_caso(self) -> None:
         """Actualiza el label lbl_caso con el caso determinado en tiempo real."""
         try:
-            artefactos = self.query_one("#widget_artefactos", WidgetArtefactos).obtener_artefactos()
+            artefactos = self.query_one(
+                "#widget_artefactos", WidgetArtefactos
+            ).obtener_artefactos()
             ruta_scripts = self.query_one("#inp_scripts", Input).value.strip() or None
             caso = determinar_caso(artefactos, ruta_scripts)
-            self.query_one("#lbl_caso", Label).update(f"Caso detectado: Caso {caso.value}")
+
+            # Mapear Caso enum a key de BD
+            caso_key_map = {
+                1: "artefactos",  # Caso.UNO
+                2: "scripts",  # Caso.DOS
+                3: "mixto",  # Caso.TRES
+            }
+
+            # Obtener el nombre del caso desde la BD
+            destinatarios = cargar_destinatarios()
+            casos = destinatarios.get("casos", {})
+            caso_key = caso_key_map.get(caso.value, "")
+            caso_nombre = casos.get(caso_key, {}).get("nombre", f"Caso {caso.value}")
+
+            self.query_one("#lbl_caso", Label).update(f"Tipo pase: {caso_nombre}")
         except ValidationError:
-            self.query_one("#lbl_caso", Label).update("Caso detectado: —")
+            self.query_one("#lbl_caso", Label).update("Tipo pase: ")
         except Exception:
-            self.query_one("#lbl_caso", Label).update("Caso detectado: —")
+            self.query_one("#lbl_caso", Label).update("Tipo pase: ")
+        except Exception:
+            self.query_one("#lbl_caso", Label).update("Tipo pase: ")
+        except Exception:
+            self.query_one("#lbl_caso", Label).update("Tipo pase: ")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn_iniciar":
@@ -131,7 +164,9 @@ class PantallaFormulario(Screen):
 
         asunto = self.query_one("#inp_asunto", Input).value.strip()
         if not asunto:
-            self.query_one("#lbl_error_asunto", Label).update("El asunto es obligatorio")
+            self.query_one("#lbl_error_asunto", Label).update(
+                "El asunto es obligatorio"
+            )
             valido = False
 
         hu = self.query_one("#inp_hu", Input).value.strip()
@@ -146,7 +181,9 @@ class PantallaFormulario(Screen):
             )
             valido = False
 
-        artefactos = self.query_one("#widget_artefactos", WidgetArtefactos).obtener_artefactos()
+        artefactos = self.query_one(
+            "#widget_artefactos", WidgetArtefactos
+        ).obtener_artefactos()
         ruta_scripts = self.query_one("#inp_scripts", Input).value.strip() or None
 
         try:
@@ -162,7 +199,11 @@ class PantallaFormulario(Screen):
             return
 
         sel_ejecucion = self.query_one("#sel_ejecucion", Select)
-        opcion_ejecucion = str(sel_ejecucion.value) if sel_ejecucion.value is not Select.BLANK else "Inmediata"
+        opcion_ejecucion = (
+            str(sel_ejecucion.value)
+            if sel_ejecucion.value is not Select.BLANK
+            else "Inmediata"
+        )
 
         pase = PaseData(
             texto_asunto=asunto,
