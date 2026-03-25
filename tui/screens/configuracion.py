@@ -189,30 +189,18 @@ class DialogoAgregarEditarCaso(Screen):
         with Vertical(id="dialog_container"):
             yield Static(f"{self._modo} Caso de Destinatarios", id="dialog_title")
 
-            yield Label("ID del Caso *")
-            yield Input(
-                value=self._caso_id or "",
-                id="inp_caso_id",
-                placeholder="ej: caso_1_devops",
-            )
-            yield Label("", id="lbl_error_caso_id", classes="error-label")
+            # Solo lectura - Nombre
+            yield Label("Caso")
+            yield Static(self._caso_data.get("nombre", ""), id="static_nombre")
 
-            yield Label("Nombre *")
-            yield Input(
-                value=self._caso_data.get("nombre", ""),
-                id="inp_nombre",
-                placeholder="ej: Caso 1 - DevOps",
-            )
-            yield Label("", id="lbl_error_nombre", classes="error-label")
-
+            # Solo lectura - Descripción
             yield Label("Descripción")
-            yield Input(
-                value=self._caso_data.get("descripcion", ""),
-                id="inp_descripcion",
-                placeholder="Descripción del caso",
+            yield Static(
+                self._caso_data.get("descripcion", ""), id="static_descripcion"
             )
 
-            yield Label("Destinatarios (para) * (separados por coma)")
+            # Editables - Destinatarios Para
+            yield Label("PARA * (separados por coma)")
             para_str = ", ".join(self._caso_data.get("para", []))
             yield Input(
                 value=para_str,
@@ -221,6 +209,7 @@ class DialogoAgregarEditarCaso(Screen):
             )
             yield Label("", id="lbl_error_para", classes="error-label")
 
+            # Editables - Destinatarios CC
             yield Label("CC (separados por coma)")
             cc_str = ", ".join(self._caso_data.get("cc", []))
             yield Input(
@@ -243,33 +232,14 @@ class DialogoAgregarEditarCaso(Screen):
     def _guardar(self) -> None:
         """Valida y retorna los datos del caso."""
         # Limpiar errores previos
-        self.query_one("#lbl_error_caso_id", Label).update("")
-        self.query_one("#lbl_error_nombre", Label).update("")
         self.query_one("#lbl_error_para", Label).update("")
 
-        caso_id = (
-            self.query_one("#inp_caso_id", Input)
-            .value.strip()
-            .lower()
-            .replace(" ", "_")
-        )
-        nombre = self.query_one("#inp_nombre", Input).value.strip()
-        descripcion = self.query_one("#inp_descripcion", Input).value.strip()
+        # Solo obtener Para y CC (los editables)
         para_str = self.query_one("#inp_para", Input).value.strip()
         cc_str = self.query_one("#inp_cc", Input).value.strip()
 
         hay_error = False
 
-        if not caso_id:
-            self.query_one("#lbl_error_caso_id", Label).update(
-                "El ID del caso es obligatorio"
-            )
-            hay_error = True
-        if not nombre:
-            self.query_one("#lbl_error_nombre", Label).update(
-                "El nombre es obligatorio"
-            )
-            hay_error = True
         if not para_str:
             self.query_one("#lbl_error_para", Label).update(
                 "Los destinatarios son obligatorios"
@@ -284,11 +254,12 @@ class DialogoAgregarEditarCaso(Screen):
         cc = [e.strip() for e in cc_str.split(",") if e.strip()]
 
         # Guardar en el app y cerrar (incluir ID si existe)
+        # Usar los valores originales de los campos de solo lectura
         self.app._temp_caso_data = {
             "id": self._caso_data.get("id"),  # ID interno para actualizaciones
-            "caso_id": caso_id,
-            "nombre": nombre,
-            "descripcion": descripcion,
+            "caso_id": self._caso_id,  # Valor original
+            "nombre": self._caso_data.get("nombre", ""),  # Valor original
+            "descripcion": self._caso_data.get("descripcion", ""),  # Valor original
             "para": para,
             "cc": cc,
         }
@@ -333,7 +304,7 @@ class PantallaConfiguracion(Screen):
                     yield Button(
                         "Agregar", id="btn_agregar_artefacto", variant="success"
                     )
-                    yield Button("Editar", id="btn_editar_artefacto", variant="default")
+                    yield Button("Editar", id="btn_editar_artefacto", variant="warning")
                     yield Button(
                         "Eliminar", id="btn_eliminar_artefacto", variant="error"
                     )
@@ -345,9 +316,7 @@ class PantallaConfiguracion(Screen):
                 )
                 yield DataTable(id="tabla_destinatarios")
                 with Horizontal(id="botones_destinatarios"):
-                    yield Button("Agregar", id="btn_agregar_caso", variant="success")
-                    yield Button("Editar", id="btn_editar_caso", variant="default")
-                    yield Button("Eliminar", id="btn_eliminar_caso", variant="error")
+                    yield Button("Editar", id="btn_editar_caso", variant="warning")
 
             # Botón Volver
             with Horizontal(id="botones_volver"):
@@ -435,14 +404,13 @@ class PantallaConfiguracion(Screen):
 
         # Agregar columnas si no existen
         if not tabla.columns:
-            tabla.add_columns("Caso", "Nombre", "Para", "CC")
+            tabla.add_columns("Caso", "Para", "CC")
 
         casos = self._destinatarios.get("casos", {})
         for caso_id, data in sorted(casos.items()):
             para = ", ".join(data.get("para", []))
             cc = ", ".join(data.get("cc", []))
             tabla.add_row(
-                caso_id,
                 data.get("nombre", ""),
                 para,
                 cc,
@@ -499,12 +467,8 @@ class PantallaConfiguracion(Screen):
         elif button_id == "btn_eliminar_artefacto":
             self._eliminar_artefacto()
         # Botones de destinatarios
-        elif button_id == "btn_agregar_caso":
-            self._agregar_caso()
         elif button_id == "btn_editar_caso":
             self._editar_caso()
-        elif button_id == "btn_eliminar_caso":
-            self._eliminar_caso()
 
     def _agregar_artefacto(self) -> None:
         """Abre el diálogo para agregar un artefacto."""
@@ -620,39 +584,6 @@ class PantallaConfiguracion(Screen):
         except Exception as e:
             self._mostrar_mensaje(f"ERROR: {e}", "error")
 
-    def _agregar_caso(self) -> None:
-        """Abre el diálogo para agregar un caso."""
-        self.app.push_screen(DialogoAgregarEditarCaso(), self._on_caso_guardado)
-
-    def _on_caso_guardado(self, screen: DialogoAgregarEditarCaso) -> None:
-        """Callback cuando se guarda el caso."""
-        data = getattr(self.app, "_temp_caso_data", None)
-        if data:
-            delattr(self.app, "_temp_caso_data")
-
-            casos = self._destinatarios.setdefault("casos", {})
-
-            # Verificar duplicado
-            if data["caso_id"] in casos:
-                self._mostrar_mensaje(
-                    f"Error: El caso '{data['caso_id']}' ya existe", "error"
-                )
-                return
-
-            try:
-                guardar_caso(
-                    data["caso_id"],
-                    data["nombre"],
-                    data.get("descripcion", ""),
-                    data["para"],
-                    data.get("cc", []),
-                )
-                self._destinatarios = cargar_destinatarios()
-            except Exception as e:
-                self._mostrar_mensaje(f"ERROR: {e}", "error")
-            self._actualizar_tabla_destinatarios()
-            self._mostrar_mensaje(f"Caso '{data['caso_id']}' agregado correctamente")
-
     def _editar_caso(self) -> None:
         """Abre el diálogo para editar el caso seleccionado."""
         tabla = self.query_one("#tabla_destinatarios", DataTable)
@@ -722,46 +653,6 @@ class PantallaConfiguracion(Screen):
             self._actualizar_tabla_destinatarios()
             self._mostrar_mensaje(f"Caso '{data['caso_id']}' actualizado correctamente")
 
-    def _eliminar_caso(self) -> None:
-        """Elimina el caso seleccionado."""
-        tabla = self.query_one("#tabla_destinatarios", DataTable)
-        fila_seleccionada = tabla.cursor_row
-
-        if fila_seleccionada is None:
-            self._mostrar_mensaje("Seleccione un caso para eliminar", "error")
-            return
-
-        casos = self._destinatarios.get("casos", {})
-        caso_ids = sorted(casos.keys())
-        if fila_seleccionada < len(caso_ids):
-            caso_id = caso_ids[fila_seleccionada]
-
-            # Mostrar diálogo de confirmación con callback directo
-            self.app.push_screen(
-                DialogoConfirmacion(
-                    "Confirmar Eliminación",
-                    f"¿Está seguro de eliminar el caso '{caso_id}'?",
-                    callback=self._on_confirmar_eliminar_caso,
-                )
-            )
-
-    def _on_confirmar_eliminar_caso(self) -> None:
-        """Callback de confirmación de eliminación de caso."""
-        try:
-            tabla = self.query_one("#tabla_destinatarios", DataTable)
-            fila_seleccionada = tabla.cursor_row
-            casos = self._destinatarios.get("casos", {})
-            caso_ids = sorted(casos.keys())
-            if fila_seleccionada is not None and fila_seleccionada < len(caso_ids):
-                caso_id = caso_ids[fila_seleccionada]
-                caso_id_db = casos[caso_id]["id"]
-                eliminar_caso(caso_id_db)
-                self._destinatarios = cargar_destinatarios()
-                self._actualizar_tabla_destinatarios()
-                self._mostrar_mensaje(f"Caso '{caso_id}' eliminado")
-        except Exception as e:
-            self._mostrar_mensaje(f"ERROR: {e}", "error")
-
     def _guardar_artefacto_individual(
         self, id: int | None, codigo: str, repo: str, nombre: str, descripcion: str
     ) -> None:
@@ -793,14 +684,6 @@ class PantallaConfiguracion(Screen):
         try:
             guardar_caso(id, caso_id, nombre, descripcion, para, cc)
             self._mostrar_mensaje(f"Caso '{caso_id}' guardado")
-        except Exception as e:
-            self._mostrar_mensaje(f"ERROR: {e}", "error")
-
-    def _eliminar_caso_db(self, id: int) -> None:
-        """Elimina un caso de la base de datos."""
-        try:
-            eliminar_caso(id)
-            self._mostrar_mensaje(f"Caso eliminado")
         except Exception as e:
             self._mostrar_mensaje(f"ERROR: {e}", "error")
 

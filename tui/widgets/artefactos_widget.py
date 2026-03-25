@@ -46,9 +46,19 @@ class FilaArtefacto(Widget):
 
     def compose(self) -> ComposeResult:
         opciones = [(codigo, codigo) for codigo in self._codigos]
-        select = Select(opciones, prompt="Seleccionar artefacto", allow_blank=True, classes="select-codigo")
+        select = Select(
+            opciones,
+            prompt="Seleccionar artefacto",
+            allow_blank=True,
+            classes="select-codigo",
+        )
         inp = Input(placeholder="URL Release", classes="input-url")
-        btn = Button("Eliminar", id=f"btn_eliminar_{self._index}", variant="error", classes="btn-eliminar")
+        btn = Button(
+            "Eliminar",
+            id=f"btn_eliminar_{self._index}",
+            variant="error",
+            classes="btn-eliminar",
+        )
         with Horizontal():
             yield select
             yield inp
@@ -67,6 +77,11 @@ class FilaArtefacto(Widget):
 
 class WidgetArtefactos(Widget):
     """Gestiona la lista dinámica de FilaArtefacto."""
+
+    class Cambio(Message):
+        """Se dispara cuando se agrega o elimina una fila de artefactos."""
+
+        pass
 
     DEFAULT_CSS = """
     WidgetArtefactos {
@@ -100,12 +115,14 @@ class WidgetArtefactos(Widget):
             self._contador += 1
             self._filas.append(fila)
             self.query_one("#contenedor_filas", Vertical).mount(fila)
+            self.post_message(self.Cambio())
 
     def on_fila_artefacto_eliminada(self, event: FilaArtefacto.Eliminada) -> None:
         fila = event.fila
         if fila in self._filas:
             self._filas.remove(fila)
         fila.remove()
+        self.post_message(self.Cambio())
 
     def obtener_artefactos(self) -> list[ArtefactoInput]:
         resultado = []
