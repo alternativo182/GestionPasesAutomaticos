@@ -263,19 +263,23 @@ Button:hover {
 
 #config_container Tabs {
     background: $surface;
-    margin-bottom: 1;
+    margin-bottom: 0;
+}
+
+#nav_botones {
+    margin-bottom: 0;
 }
 
 #lbl_artefactos_titulo {
     text-style: bold;
     color: $lavender;
-    padding-bottom: 1;
+    padding-bottom: 0;
 }
 
 #lbl_destinatarios_titulo {
     text-style: bold;
     color: $lavender;
-    padding-bottom: 1;
+    padding-bottom: 0;
 }
 
 #config_container DataTable {
@@ -283,17 +287,17 @@ Button:hover {
     border: round $overlay;
     height: 10;
     width: 100%;
-    margin-bottom: 1;
+    margin-bottom: 0;
 }
 
 #botones_artefactos {
-    padding-top: 1;
+    padding-top: 0;
     height: auto;
     align: left middle;
 }
 
 #botones_destinatarios {
-    padding-top: 1;
+    padding-top: 0;
     height: auto;
     align: left middle;
 }
