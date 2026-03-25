@@ -36,48 +36,52 @@ try {
     if (-not $existingChrome) {
         Write-Step "Primera instalación: configurando browser Chromium..."
         Write-Warn "Esto descargará ~400MB solo la primera vez"
+        Write-Host "  Cache: $CacheDir" -ForegroundColor Gray
         
-        # Crear directorio temporal para descarga
+        # Crear directorios
+        New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
         $tempDir = "$env:TEMP\GestionPases_browser"
         New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
         
-        # Descargar browser directamente desde CDN de Microsoft/Playwright
+        # Descargar browser - usar la URL más reciente
         Write-Step "Descargando Chromium (~400MB)..."
         $browserUrl = "https://playwright.azureedge.net/builds/chromium/1155/chromium-win64.zip"
         $browserZip = "$tempDir\chromium.zip"
+        Write-Host "  URL: $browserUrl" -ForegroundColor Gray
+        Write-Host "  Destino: $browserZip" -ForegroundColor Gray
         
-        try {
-            # Descargar con progreso
-            $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -Uri $browserUrl -OutFile $browserZip -UseBasicParsing
-            $ProgressPreference = 'Continue'
-            Write-Ok "Descarga completada"
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $browserUrl -OutFile $browserZip -UseBasicParsing
+        $ProgressPreference = 'Continue'
+        
+        if (Test-Path $browserZip) {
+            $zipSize = [math]::Round((Get-Item $browserZip).Length / 1MB, 1)
+            Write-Ok "Descarga completada: ${zipSize}MB"
             
             # Extraer a carpeta de cache
             Write-Step "Instalando browser en cache..."
             Expand-Archive -Path $browserZip -DestinationPath $CacheDir -Force
-            
-            # Limpiar zip temporal
             Remove-Item $browserZip -Force
-            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-            
-        } catch {
-            Write-Error "No se pudo descargar el browser: $_"
-            Write-Host ""
-            Write-Host "  Instale Chromium manualmente:" -ForegroundColor Yellow
-            Write-Host "  1. Descargue desde: https://playwright.dev/docs/browsers" -ForegroundColor Yellow
-            Write-Host "  2. Extraiga en: $CacheDir" -ForegroundColor Yellow
+            Write-Ok "Extracción completada"
+        } else {
+            Write-Error "El archivo ZIP no se descargó correctamente"
         }
+        
+        # Limpiar
+        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         
         # Verificar si se instaló
         $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($existingChrome) {
             Write-Ok "Browser instalado en: $($existingChrome.DirectoryName)"
         } else {
-            Write-Warn "Browser no encontrado. La app podría no funcionar."
+            Write-Warn "Browser no encontrado en: $CacheDir"
+            Write-Host "  Contenido de cache:" -ForegroundColor Gray
+            Get-ChildItem $CacheDir -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "    $($_.FullName)" -ForegroundColor Gray }
         }
     } else {
         Write-Ok "Browser Chromium ya instalado en cache"
+        Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
     }
     
     # 2. Obtener última release
