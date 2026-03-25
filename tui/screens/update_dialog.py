@@ -26,31 +26,31 @@ class UpdateDialog(ModalScreen):
     #update-container {
         width: 60;
         height: auto;
-        max-height: 15;
+        padding: 1 2;
         background: $surface;
         border: thick $warning;
-        padding: 1 2;
     }
 
     #update-title {
         text-style: bold;
         color: $warning;
-        margin-bottom: 1;
         text-align: center;
+        margin-bottom: 1;
     }
 
     #update-info {
-        margin-bottom: 1;
         text-align: center;
+        margin-bottom: 2;
     }
 
     #update-buttons {
+        width: 100%;
+        height: auto;
         align: center middle;
-        margin-top: 1;
     }
 
-    #btn-update {
-        margin-right: 2;
+    Button {
+        margin: 0 1;
     }
     """
 

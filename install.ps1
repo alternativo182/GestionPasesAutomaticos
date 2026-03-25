@@ -39,8 +39,23 @@ try {
     
     # 2. Crear directorio de instalación
     Write-Step "Preparando directorio de instalación..."
+    
+    # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
+    $maxAttempts = 10
+    $attempt = 0
+    while ($attempt -lt $maxAttempts) {
+        $process = Get-Process -Name "GestionPases" -ErrorAction SilentlyContinue
+        if ($process) {
+            Write-Host "[*] Esperando que se cierre GestionPases..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 1
+            $attempt++
+        } else {
+            break
+        }
+    }
+    
     if (Test-Path $InstallDir) {
-        Remove-Item $InstallDir -Recurse -Force
+        Remove-Item $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
     }
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     Write-Ok "Directorio: $InstallDir"
