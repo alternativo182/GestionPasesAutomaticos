@@ -84,6 +84,6 @@ debug_*.png
 # Archivos rar
 *.rar
 
-# Base de datos local (datos del usuario)
-config/config.db
+# Scripts batch (locales de desarrollo)
+*.bat
 
