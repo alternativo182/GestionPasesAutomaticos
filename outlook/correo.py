@@ -8,22 +8,25 @@ def construir_correo(pase: PaseData, destinatarios: dict) -> CorreoData:
     """Función pura. Construye asunto, para, cc y cuerpo según el caso del pase."""
     casos = destinatarios["casos"]
 
+    # Mapear Caso enum a keys de BD
+    caso_key_map = {
+        Caso.UNO: "artefactos",
+        Caso.DOS: "scripts",
+        Caso.TRES: "mixto",
+    }
+
     asunto = f"SICO - PASE A PRODUCCIÓN: {pase.texto_asunto}"
 
+    caso_key = caso_key_map.get(pase.caso, "artefactos")
+    dest = casos[caso_key]
+    para = dest["para"]
+    cc = dest["cc"]
+
     if pase.caso == Caso.UNO:
-        dest = casos["caso_1_devops"]
-        para = dest["para"]
-        cc = dest["cc"]
         cuerpo = _cuerpo_caso_1(pase)
     elif pase.caso == Caso.DOS:
-        dest = casos["caso_2_manual"]
-        para = dest["para"]
-        cc = dest["cc"]
         cuerpo = _cuerpo_caso_2(pase)
     else:  # Caso.TRES
-        dest = casos["caso_3_mixto"]
-        para = dest["para"]
-        cc = dest["cc"]
         cuerpo = _cuerpo_caso_3(pase)
 
     return CorreoData(asunto=asunto, para=para, cc=cc, cuerpo=cuerpo)

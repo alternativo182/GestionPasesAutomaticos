@@ -54,9 +54,9 @@ class PantallaFormulario(Screen):
         ("escape", "volver", "Volver"),
     ]
 
-    def __init__(self, codigos: list[str] | None = None) -> None:
+    def __init__(self, nombre_a_codigo: dict[str, str] | None = None) -> None:
         super().__init__()
-        self._codigos: list[str] = codigos or []
+        self._nombre_a_codigo: dict[str, str] = nombre_a_codigo or {}
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -82,7 +82,11 @@ class PantallaFormulario(Screen):
                 )
 
                 yield Label("Artefactos")
-                yield WidgetArtefactos(self._codigos, id="widget_artefactos")
+                yield WidgetArtefactos(
+                    list(self._nombre_a_codigo.keys()),
+                    self._nombre_a_codigo,
+                    id="widget_artefactos",
+                )
                 yield Label("", id="lbl_error_artefactos", classes="error-label")
 
                 yield Label("Ruta Scripts BD (opcional)")

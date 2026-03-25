@@ -39,13 +39,16 @@ class FilaArtefacto(Widget):
             super().__init__()
             self.fila = fila
 
-    def __init__(self, codigos: list[str], index: int) -> None:
+    def __init__(
+        self, nombres: list[str], nombre_a_codigo: dict[str, str], index: int
+    ) -> None:
         super().__init__()
-        self._codigos = codigos
+        self._nombres = nombres
+        self._nombre_a_codigo = nombre_a_codigo
         self._index = index
 
     def compose(self) -> ComposeResult:
-        opciones = [(codigo, codigo) for codigo in self._codigos]
+        opciones = [(nombre, nombre) for nombre in self._nombres]
         select = Select(
             opciones,
             prompt="Seleccionar artefacto",
@@ -68,6 +71,16 @@ class FilaArtefacto(Widget):
         self.query_one(".select-codigo").styles.width = "40%"
         self.query_one(".input-url").styles.width = "1fr"
         self.query_one(".btn-eliminar").styles.width = 14
+
+    def obtener_artefacto(self) -> ArtefactoInput | None:
+        """Obtiene el artefacto seleccionado, convirtiendo nombre a código."""
+        nombre = self.query_one(".select-codigo", Select).value
+        url = self.query_one(".input-url", Input).value
+        if nombre is Select.BLANK or not nombre:
+            return None
+        # Convertir nombre a código usando el mapeo
+        codigo = self._nombre_a_codigo.get(nombre, nombre)
+        return ArtefactoInput(codigo=codigo, url_release=url)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == f"btn_eliminar_{self._index}":
@@ -98,9 +111,15 @@ class WidgetArtefactos(Widget):
     }
     """
 
-    def __init__(self, codigos: list[str], **kwargs) -> None:
+    def __init__(
+        self,
+        nombres: list[str],
+        nombre_a_codigo: dict[str, str] | None = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
-        self._codigos = codigos
+        self._nombres = nombres
+        self._nombre_a_codigo = nombre_a_codigo or {}
         self._filas: list[FilaArtefacto] = []
         self._contador = 0
 
@@ -111,7 +130,7 @@ class WidgetArtefactos(Widget):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn_agregar":
             event.stop()
-            fila = FilaArtefacto(self._codigos, self._contador)
+            fila = FilaArtefacto(self._nombres, self._nombre_a_codigo, self._contador)
             self._contador += 1
             self._filas.append(fila)
             self.query_one("#contenedor_filas", Vertical).mount(fila)
@@ -127,9 +146,7 @@ class WidgetArtefactos(Widget):
     def obtener_artefactos(self) -> list[ArtefactoInput]:
         resultado = []
         for fila in self._filas:
-            codigo = fila.query_one(".select-codigo", Select).value
-            url = fila.query_one(".input-url", Input).value
-            if codigo is Select.BLANK or not codigo:
-                continue
-            resultado.append(ArtefactoInput(codigo=str(codigo), url_release=url))
+            artefacto = fila.obtener_artefacto()
+            if artefacto:
+                resultado.append(artefacto)
         return resultado

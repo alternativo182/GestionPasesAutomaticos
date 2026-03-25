@@ -41,6 +41,22 @@ class DialogoAgregarEditarArtefacto(Screen):
         yield Header()
         with Vertical(id="dialog_container"):
             yield Static(f"{self._modo} Artefacto", id="dialog_title")
+
+            yield Label("Nombre *")
+            yield Input(
+                value=self._artefacto.get("nombre", ""),
+                id="inp_nombre",
+                placeholder="ej: CORE - SICO Común",
+            )
+            yield Label("", id="lbl_error_nombre", classes="error-label")
+
+            yield Label("Descripción")
+            yield Input(
+                value=self._artefacto.get("descripcion", ""),
+                id="inp_descripcion",
+                placeholder="Descripción del sistema",
+            )
+
             yield Label("Artefacto *")
             # En modo edición, usar el código original
             valor_codigo = self._codigo_original or self._artefacto.get("codigo", "")
@@ -58,21 +74,6 @@ class DialogoAgregarEditarArtefacto(Screen):
                 placeholder="ej: msc-sicocomun",
             )
             yield Label("", id="lbl_error_repo", classes="error-label")
-
-            yield Label("Nombre *")
-            yield Input(
-                value=self._artefacto.get("nombre", ""),
-                id="inp_nombre",
-                placeholder="ej: CORE - SICO Común",
-            )
-            yield Label("", id="lbl_error_nombre", classes="error-label")
-
-            yield Label("Descripción")
-            yield Input(
-                value=self._artefacto.get("descripcion", ""),
-                id="inp_descripcion",
-                placeholder="Descripción del sistema",
-            )
 
             with Horizontal(id="dialog_botones"):
                 yield Button("Guardar", id="btn_guardar", variant="success")
@@ -190,14 +191,8 @@ class DialogoAgregarEditarCaso(Screen):
             yield Static(f"{self._modo} Caso de Destinatarios", id="dialog_title")
 
             # Solo lectura - Nombre
-            yield Label("Caso")
+            yield Label("Tipo pase")
             yield Static(self._caso_data.get("nombre", ""), id="static_nombre")
-
-            # Solo lectura - Descripción
-            yield Label("Descripción")
-            yield Static(
-                self._caso_data.get("descripcion", ""), id="static_descripcion"
-            )
 
             # Editables - Destinatarios Para
             yield Label("PARA * (separados por coma)")
@@ -312,7 +307,7 @@ class PantallaConfiguracion(Screen):
             # Sección de Destinatarios
             with Vertical(id="seccion_destinatarios"):
                 yield Label(
-                    "Gestión de Destinatarios por Caso", id="lbl_destinatarios_titulo"
+                    "Gestión Destinatarios por Tipo pase", id="lbl_destinatarios_titulo"
                 )
                 yield DataTable(id="tabla_destinatarios")
                 with Horizontal(id="botones_destinatarios"):
@@ -386,15 +381,15 @@ class PantallaConfiguracion(Screen):
 
         # Agregar columnas si no existen
         if not tabla.columns:
-            tabla.add_columns("Artefacto", "Repositorio", "Nombre", "Descripción")
+            tabla.add_columns("Nombre", "Descripción", "Artefacto", "Repositorio")
 
         # Agregar filas
         for codigo, data in sorted(self._artefactos.items()):
             tabla.add_row(
-                codigo,
-                data.get("repo", ""),
                 data.get("nombre", ""),
                 data.get("descripcion", ""),
+                codigo,
+                data.get("repo", ""),
             )
 
     def _actualizar_tabla_destinatarios(self) -> None:
@@ -404,7 +399,7 @@ class PantallaConfiguracion(Screen):
 
         # Agregar columnas si no existen
         if not tabla.columns:
-            tabla.add_columns("Caso", "Para", "CC")
+            tabla.add_columns("Tipo pase", "Para", "CC")
 
         casos = self._destinatarios.get("casos", {})
         for caso_id, data in sorted(casos.items()):

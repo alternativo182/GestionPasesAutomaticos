@@ -278,12 +278,12 @@ class TestIntegracionCorreos:
 
         destinatarios = {
             "casos": {
-                "caso_1_devops": {
+                "artefactos": {
                     "para": ["test1@test.com", "test2@test.com"],
                     "cc": ["cc1@test.com"],
                 },
-                "caso_2_manual": {"para": ["manual@test.com"], "cc": []},
-                "caso_3_mixto": {
+                "scripts": {"para": ["manual@test.com"], "cc": []},
+                "mixto": {
                     "para": ["mix1@test.com", "mix2@test.com"],
                     "cc": ["ccmix1@test.com", "ccmix2@test.com"],
                 },

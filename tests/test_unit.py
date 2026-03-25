@@ -1,46 +1,53 @@
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
 from exceptions import ConfigError
-from utils.config_loader import cargar_artefactos, cargar_destinatarios
+from utils.config_loader import cargar_artefactos, cargar_destinatarios, inicializar_db
 
 
 # --- cargar_artefactos ---
 
-def test_cargar_artefactos_archivo_inexistente():
-    with pytest.raises(ConfigError):
-        cargar_artefactos("/ruta/que/no/existe/artefactos.json")
+
+def test_cargar_artefactos_retorna_dict():
+    """Verifica que cargar_artefactos retorne un diccionario."""
+    artefactos = cargar_artefactos()
+    assert isinstance(artefactos, dict)
 
 
-def test_cargar_artefactos_json_invalido():
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
-        f.write("esto no es json {{{")
-        ruta = f.name
-    try:
-        with pytest.raises(ConfigError):
-            cargar_artefactos(ruta)
-    finally:
-        os.unlink(ruta)
+def test_cargar_artefactos_tiene_campos():
+    """Verifica que los artefactos tengan los campos esperados."""
+    artefactos = cargar_artefactos()
+    if artefactos:
+        primer_artefacto = next(iter(artefactos.values()))
+        assert "id" in primer_artefacto
+        assert "repo" in primer_artefacto
+        assert "nombre" in primer_artefacto
+        assert "descripcion" in primer_artefacto
 
 
 # --- cargar_destinatarios ---
 
-def test_cargar_destinatarios_archivo_inexistente():
-    with pytest.raises(ConfigError):
-        cargar_destinatarios("/ruta/que/no/existe/destinatarios.json")
+
+def test_cargar_destinatarios_retorna_dict():
+    """Verifica que cargar_destinatarios retorne un diccionario."""
+    destinatarios = cargar_destinatarios()
+    assert isinstance(destinatarios, dict)
+    assert "casos" in destinatarios
 
 
-def test_cargar_destinatarios_json_invalido():
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as f:
-        f.write("esto no es json {{{")
-        ruta = f.name
-    try:
-        with pytest.raises(ConfigError):
-            cargar_destinatarios(ruta)
-    finally:
-        os.unlink(ruta)
+def test_cargar_destinatarios_tiene_campos():
+    """Verifica que los destinatarios tengan los campos esperados."""
+    destinatarios = cargar_destinatarios()
+    casos = destinatarios.get("casos", {})
+    if casos:
+        primer_caso = next(iter(casos.values()))
+        assert "id" in primer_caso
+        assert "nombre" in primer_caso
+        assert "para" in primer_caso
+        assert "cc" in primer_caso
 
 
 # --- correo.py ---
@@ -84,15 +91,26 @@ def test_completar_formulario_devops_lanza_forms_error_con_nombre_artefacto():
     """Verifica que FormsError se lanza con el código del artefacto cuando page.goto falla."""
     page = MagicMock()
     page.goto.side_effect = Exception("Error de navegación")
-    artefacto = ArtefactoInput(codigo="cosicocomun", url_release="http://example.com/v1.0")
-    artefactos_idx = {"cosicocomun": {"repo": "msc-sicocomun", "nombre": "X", "descripcion": "Y"}}
+    artefacto = ArtefactoInput(
+        codigo="cosicocomun", url_release="http://example.com/v1.0"
+    )
+    artefactos_idx = {
+        "cosicocomun": {"repo": "msc-sicocomun", "nombre": "X", "descripcion": "Y"}
+    }
     pase = PaseData(
-        texto_asunto="test", texto_hu="HU-1", fecha="1/1/2025",
-        opcion_ejecucion="Inmediata", artefactos=[artefacto],
-        ruta_scripts=None, forms_url="http://forms.example.com", caso=Caso.UNO,
+        texto_asunto="test",
+        texto_hu="HU-1",
+        fecha="1/1/2025",
+        opcion_ejecucion="Inmediata",
+        artefactos=[artefacto],
+        ruta_scripts=None,
+        forms_url="http://forms.example.com",
+        caso=Caso.UNO,
     )
     with pytest.raises(FormsError) as exc_info:
-        completar_formulario_devops(page, "http://forms.example.com", pase, artefacto, artefactos_idx)
+        completar_formulario_devops(
+            page, "http://forms.example.com", pase, artefacto, artefactos_idx
+        )
     assert "cosicocomun" in str(exc_info.value)
 
 
@@ -113,13 +131,21 @@ def _make_pase(caso=Caso.UNO, n_artefactos=1):
     if caso == Caso.DOS:
         artefactos = []
     return PaseData(
-        texto_asunto="test", texto_hu="HU-1", fecha="1/1/2025",
-        opcion_ejecucion="Inmediata", artefactos=artefactos,
-        ruta_scripts=ruta, forms_url="http://forms.example.com", caso=caso,
+        texto_asunto="test",
+        texto_hu="HU-1",
+        fecha="1/1/2025",
+        opcion_ejecucion="Inmediata",
+        artefactos=artefactos,
+        ruta_scripts=ruta,
+        forms_url="http://forms.example.com",
+        caso=caso,
     )
 
 
-_ARTEFACTOS_IDX = {f"art{i}": {"repo": f"repo{i}", "nombre": f"N{i}", "descripcion": ""} for i in range(5)}
+_ARTEFACTOS_IDX = {
+    f"art{i}": {"repo": f"repo{i}", "nombre": f"N{i}", "descripcion": ""}
+    for i in range(5)
+}
 _DESTINATARIOS = {}
 
 
@@ -127,26 +153,34 @@ _DESTINATARIOS = {}
 @patch("main.completar_formulario_devops")
 @patch("main.enviar_correo")
 @patch("main.construir_correo")
-def test_enviar_correo_antes_que_formularios(mock_construir, mock_enviar, mock_devops, mock_manual):
+def test_enviar_correo_antes_que_formularios(
+    mock_construir, mock_enviar, mock_devops, mock_manual
+):
     """Req 4.1: enviar_correo se llama antes que cualquier completar_formulario_*."""
     page = MagicMock()
     call_order = []
     mock_enviar.side_effect = lambda *a, **kw: call_order.append("enviar_correo")
-    mock_devops.side_effect = lambda *a, **kw: call_order.append("completar_formulario_devops")
+    mock_devops.side_effect = lambda *a, **kw: call_order.append(
+        "completar_formulario_devops"
+    )
 
     pase = _make_pase(Caso.UNO, n_artefactos=1)
     _ejecutar_pase(page, pase, _ARTEFACTOS_IDX, _DESTINATARIOS)
 
     assert "enviar_correo" in call_order
     assert "completar_formulario_devops" in call_order
-    assert call_order.index("enviar_correo") < call_order.index("completar_formulario_devops")
+    assert call_order.index("enviar_correo") < call_order.index(
+        "completar_formulario_devops"
+    )
 
 
 @patch("main.completar_formulario_manual")
 @patch("main.completar_formulario_devops")
 @patch("main.enviar_correo")
 @patch("main.construir_correo")
-def test_caso3_devops_antes_que_manual(mock_construir, mock_enviar, mock_devops, mock_manual):
+def test_caso3_devops_antes_que_manual(
+    mock_construir, mock_enviar, mock_devops, mock_manual
+):
     """Req 8.1/8.2: en Caso_3 todos los formularios DevOps se crean antes del Manual."""
     page = MagicMock()
     call_order = []
@@ -168,7 +202,9 @@ def test_caso3_devops_antes_que_manual(mock_construir, mock_enviar, mock_devops,
 @patch("main.completar_formulario_devops")
 @patch("main.enviar_correo")
 @patch("main.construir_correo")
-def test_outlook_error_detiene_ejecucion(mock_construir, mock_enviar, mock_devops, mock_manual):
+def test_outlook_error_detiene_ejecucion(
+    mock_construir, mock_enviar, mock_devops, mock_manual
+):
     """Req 5.11: OutlookError en enviar_correo detiene la ejecución sin llamar a ningún formulario."""
     page = MagicMock()
     mock_enviar.side_effect = OutlookError("fallo outlook")
@@ -185,7 +221,9 @@ def test_outlook_error_detiene_ejecucion(mock_construir, mock_enviar, mock_devop
 @patch("main.completar_formulario_devops")
 @patch("main.enviar_correo")
 @patch("main.construir_correo")
-def test_forms_error_no_impide_siguiente_artefacto(mock_construir, mock_enviar, mock_devops, mock_manual):
+def test_forms_error_no_impide_siguiente_artefacto(
+    mock_construir, mock_enviar, mock_devops, mock_manual
+):
     """Req 5.11: FormsError en artefacto N no impide procesar el artefacto N+1."""
     page = MagicMock()
     call_count = {"n": 0}
