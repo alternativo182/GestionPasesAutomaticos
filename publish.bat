@@ -24,7 +24,7 @@ echo.
 
 rem Actualizar versión en update_checker.py
 echo [1/6] Actualizando versión en update_checker.py...
-python -c "import re; c=open('utils/update_checker.py','r',encoding='utf-8').read(); open('utils/update_checker.py','w',encoding='utf-8').write(re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"%VERSION%\"', c))"
+python update_version.py %VERSION%
 echo [OK] Versión actualizada a %VERSION%
 
 rem Limpiar builds anteriores
