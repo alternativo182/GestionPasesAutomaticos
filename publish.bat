@@ -24,7 +24,7 @@ echo.
 
 rem Actualizar versión en update_checker.py
 echo [1/6] Actualizando versión en update_checker.py...
-powershell -Command "(Get-Content 'utils\update_checker.py') -replace '__version__ = \"[^\"]*\"', '__version__ = \"%VERSION%\"' | Set-Content 'utils\update_checker.py'"
+python -c "import re; c=open('utils/update_checker.py','r').read(); open('utils/update_checker.py','w').write(re.sub(r'__version__ = \"[^\"]*\"', '__version__ = \"%VERSION%\"', c))"
 echo [OK] Versión actualizada a %VERSION%
 
 rem Limpiar builds anteriores
