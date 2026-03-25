@@ -37,23 +37,36 @@ try {
         Write-Step "Primera instalación: configurando browser Chromium..."
         Write-Warn "Esto descargará ~400MB solo la primera vez"
         
-        # Crear directorio de cache
-        New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
+        # Crear directorio temporal para descarga
+        $tempDir = "$env:TEMP\GestionPases_browser"
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
         
-        # Descargar browser usando Playwright CLI (instala la versión correcta automáticamente)
+        # Descargar browser directamente desde CDN de Microsoft/Playwright
         Write-Step "Descargando Chromium (~400MB)..."
+        $browserUrl = "https://playwright.azureedge.net/builds/chromium/1155/chromium-win64.zip"
+        $browserZip = "$tempDir\chromium.zip"
         
         try {
-            # Usar npx playwright install que descarga la versión correcta automáticamente
-            $env:PLAYWRIGHT_BROWSERS_PATH = $CacheDir
-            & npx.cmd playwright install chromium 2>&1 | Out-Null
+            # Descargar con progreso
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri $browserUrl -OutFile $browserZip -UseBasicParsing
+            $ProgressPreference = 'Continue'
+            Write-Ok "Descarga completada"
+            
+            # Extraer a carpeta de cache
+            Write-Step "Instalando browser en cache..."
+            Expand-Archive -Path $browserZip -DestinationPath $CacheDir -Force
+            
+            # Limpiar zip temporal
+            Remove-Item $browserZip -Force
+            Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+            
         } catch {
-            Write-Warn "No se pudo descargar automáticamente."
+            Write-Error "No se pudo descargar el browser: $_"
             Write-Host ""
             Write-Host "  Instale Chromium manualmente:" -ForegroundColor Yellow
-            Write-Host "  1. Ejecute: npx playwright install chromium" -ForegroundColor Yellow
-            Write-Host "  2. O descargue desde: https://playwright.dev/docs/browsers" -ForegroundColor Yellow
-            Write-Host ""
+            Write-Host "  1. Descargue desde: https://playwright.dev/docs/browsers" -ForegroundColor Yellow
+            Write-Host "  2. Extraiga en: $CacheDir" -ForegroundColor Yellow
         }
         
         # Verificar si se instaló
