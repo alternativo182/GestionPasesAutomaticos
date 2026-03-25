@@ -114,65 +114,16 @@ def inicializar_db() -> None:
             )
         """)
 
-        # Si no hay datos, cargar desde seed data o JSON legacy
+        # Si no hay datos, cargar desde seed data
         cursor.execute("SELECT COUNT(*) as count FROM artefactos")
         if cursor.fetchone()["count"] == 0:
-            # Primero intentar con seed data (datos incluidos en el código)
             from utils.seed_data import seed_database
 
-            inserted = seed_database(cursor)
-
-            # Si no hay seed data, intentar con JSON legacy (compatibilidad)
-            if inserted == 0:
-                _cargar_desde_json_legacy(cursor)
+            seed_database(cursor)
 
         conn.commit()
     finally:
         conn.close()
-
-
-def _cargar_desde_json_legacy(cursor: sqlite3.Cursor) -> None:
-    """Carga datos iniciales desde los archivos JSON legacy."""
-    import json
-
-    # Cargar artefactos
-    json_path = BASE_DIR / "config" / "artefactos.json"
-    if json_path.exists():
-        try:
-            with open(json_path, encoding="utf-8") as f:
-                data = json.load(f)
-            for item in data.get("artefactos", []):
-                cursor.execute(
-                    "INSERT OR IGNORE INTO artefactos (codigo, repo, nombre, descripcion) VALUES (?, ?, ?, ?)",
-                    (
-                        item["codigo"],
-                        item["repo"],
-                        item["nombre"],
-                        item.get("descripcion", ""),
-                    ),
-                )
-        except Exception:
-            pass
-
-    # Cargar destinatarios
-    json_path = BASE_DIR / "config" / "destinatarios.json"
-    if json_path.exists():
-        try:
-            with open(json_path, encoding="utf-8") as f:
-                data = json.load(f)
-            for caso_id, item in data.get("casos", {}).items():
-                cursor.execute(
-                    "INSERT OR IGNORE INTO destinatarios (caso_id, nombre, descripcion, para, cc) VALUES (?, ?, ?, ?, ?)",
-                    (
-                        caso_id,
-                        item.get("nombre", ""),
-                        item.get("descripcion", ""),
-                        ",".join(item.get("para", [])),
-                        ",".join(item.get("cc", [])),
-                    ),
-                )
-        except Exception:
-            pass
 
 
 def cargar_artefactos() -> dict[str, dict]:
