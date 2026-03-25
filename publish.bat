@@ -19,14 +19,19 @@ echo.
 echo Versión a publicar: v%VERSION%
 echo.
 
+rem Actualizar versión en update_checker.py
+echo [1/6] Actualizando versión en update_checker.py...
+powershell -Command "(Get-Content 'utils\update_checker.py') -replace '__version__ = \"[^\"]*\"', '__version__ = \"%VERSION%\"' | Set-Content 'utils\update_checker.py'"
+echo [OK] Versión actualizada a %VERSION%
+
 rem Limpiar builds anteriores
-echo [1/5] Limpiando builds anteriores...
+echo [2/6] Limpiando builds anteriores...
 if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
 if exist *.spec del *.spec
 
 rem Build con PyInstaller
-echo [2/5] Compilando exe...
+echo [3/6] Compilando exe...
 pyinstaller --name "GestionPases" ^
     --onedir ^
     --add-data "config;config" ^
@@ -42,19 +47,30 @@ if errorlevel 1 (
 )
 
 rem Copiar browsers de Playwright
-echo [3/5] Copiando Chromium...
+echo [4/6] Copiando Chromium...
 xcopy /s /e /y "%LOCALAPPDATA%\ms-playwright\chromium-*" "dist\GestionPases\_internal\ms-playwright\" >nul
 
 rem Crear ZIP
-echo [4/5] Creando ZIP...
+echo [5/6] Creando ZIP...
 powershell -Command "Compress-Archive -Path 'dist\GestionPases' -DestinationPath 'dist\GestionPases.zip' -CompressionLevel Optimal -Force"
 
+rem Commit y push de la nueva versión
+echo [6/6] Guardando cambios en Git...
+git add utils/update_checker.py
+git commit -m "chore: actualizar versión a v%VERSION%"
+git push origin dev
+git checkout main
+git merge dev
+git push origin main
+git checkout dev
+
 rem Crear Release en GitHub
-echo [5/5] Publicando en GitHub Releases...
+echo.
+echo Publicando Release v%VERSION% en GitHub...
 gh release create v%VERSION% "dist\GestionPases.zip" ^
     --title "GestionPases v%VERSION%" ^
     --notes "Versión %VERSION% empaquetada como .exe" ^
-    --target dev
+    --target main
 
 if errorlevel 1 (
     echo ERROR: Falló la publicación en GitHub
