@@ -2,7 +2,7 @@ from textual.app import App, ComposeResult
 
 from tui import APP_TITLE
 from tui.screens.bienvenida import PantallaBienvenida
-from utils.config_loader import cargar_artefactos, cargar_destinatarios
+from utils.config_loader import cargar_artefactos, cargar_destinatarios, inicializar_db
 
 
 class TUIApp(App):
@@ -13,6 +13,9 @@ class TUIApp(App):
     BINDINGS = [("q", "quit", "Salir")]
 
     async def on_mount(self) -> None:
+        # Inicializar base de datos SQLite
+        inicializar_db()
+
         self.artefactos_idx = cargar_artefactos()
         self.destinatarios = cargar_destinatarios()
         await self.push_screen(PantallaBienvenida())
