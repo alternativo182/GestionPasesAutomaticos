@@ -1,20 +1,6 @@
 """Pantalla de configuración para editar artefactos y destinatarios."""
 
-import logging
-import os
-from pathlib import Path
 from textual.message import Message
-
-# Configurar logging a archivo
-LOG_DIR = Path("logs")
-LOG_DIR.mkdir(exist_ok=True)
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename=LOG_DIR / "configuracion.log",
-    filemode="a",
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
@@ -27,25 +13,6 @@ from textual.widgets import (
     Label,
     Static,
 )
-
-from exceptions import ConfigError
-
-
-# Mensajes personalizados para comunicar diálogo -> pantalla
-class ArtefactoGuardado(Message):
-    """Mensaje cuando se guarda un artefacto desde el diálogo."""
-
-    def __init__(self, data: dict) -> None:
-        super().__init__()
-        self.data = data
-
-
-class CasoGuardado(Message):
-    """Mensaje cuando se guarda un caso desde el diálogo."""
-
-    def __init__(self, data: dict) -> None:
-        super().__init__()
-        self.data = data
 
 
 from utils.config_loader import (
@@ -348,62 +315,6 @@ class PantallaConfiguracion(Screen):
         self._destinatarios: dict = {}
         self._tab_seleccionada = "artefactos"
 
-    # Handlers para mensajes de los diálogos
-    def on_artefacto_guardado(self, event: ArtefactoGuardado) -> None:
-        """Maneja el evento de artefacto guardado desde el diálogo."""
-        self._mostrar_mensaje(f"DEBUG: Artefacto guardado! {event.data}")
-        data = event.data
-
-        # Verificar duplicado
-        if data["codigo"] in self._artefactos:
-            self._mostrar_mensaje(
-                f"Error: El código '{data['codigo']}' ya existe", "error"
-            )
-            return
-
-        try:
-            guardar_artefacto(
-                None,  # id - None para nuevo registro
-                data["codigo"],
-                data["repo"],
-                data["nombre"],
-                data.get("descripcion", ""),
-            )
-            self._artefactos = cargar_artefactos()
-        except Exception as e:
-            self._mostrar_mensaje(f"ERROR: {e}", "error")
-        self._actualizar_tabla_artefactos()
-        self._mostrar_mensaje(f"Artefacto '{data['codigo']}' agregado correctamente")
-
-    def on_caso_guardado(self, event: CasoGuardado) -> None:
-        """Maneja el evento de caso guardado desde el diálogo."""
-        self._mostrar_mensaje(f"DEBUG: Caso guardado! {event.data}")
-        data = event.data
-
-        casos = self._destinatarios.setdefault("casos", {})
-
-        # Verificar duplicado
-        if data["caso_id"] in casos:
-            self._mostrar_mensaje(
-                f"Error: El caso '{data['caso_id']}' ya existe", "error"
-            )
-            return
-
-        try:
-            guardar_caso(
-                None,  # id - None para nuevo registro
-                data["caso_id"],
-                data["nombre"],
-                data.get("descripcion", ""),
-                data["para"],
-                data.get("cc", []),
-            )
-            self._destinatarios = cargar_destinatarios()
-        except Exception as e:
-            self._mostrar_mensaje(f"ERROR: {e}", "error")
-        self._actualizar_tabla_destinatarios()
-        self._mostrar_mensaje(f"Caso '{data['caso_id']}' agregado correctamente")
-
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(id="config_container"):
@@ -434,13 +345,9 @@ class PantallaConfiguracion(Screen):
                 )
                 yield DataTable(id="tabla_destinatarios")
                 with Horizontal(id="botones_destinatarios"):
-                    yield Button(
-                        "Agregar", id="btn_agregar_caso", variant="success"
-                    )
+                    yield Button("Agregar", id="btn_agregar_caso", variant="success")
                     yield Button("Editar", id="btn_editar_caso", variant="default")
-                    yield Button(
-                        "Eliminar", id="btn_eliminar_caso", variant="error"
-                    )
+                    yield Button("Eliminar", id="btn_eliminar_caso", variant="error")
 
             # Botón Volver
             with Horizontal(id="botones_volver"):
@@ -454,7 +361,6 @@ class PantallaConfiguracion(Screen):
         # Verificar artefactos
         data = getattr(self.app, "_temp_artefacto_data", None)
         if data:
-            self._mostrar_mensaje(f"DEBUG: Guardando artefacto: {data['codigo']}")
             delattr(self.app, "_temp_artefacto_data")
 
             # Obtener ID si existe
@@ -478,7 +384,6 @@ class PantallaConfiguracion(Screen):
         # Verificar casos
         caso_data = getattr(self.app, "_temp_caso_data", None)
         if caso_data:
-            self._mostrar_mensaje(f"DEBUG: Guardando caso: {caso_data['caso_id']}")
             delattr(self.app, "_temp_caso_data")
 
             # Obtener ID si existe
@@ -499,64 +404,6 @@ class PantallaConfiguracion(Screen):
             self._actualizar_tabla_destinatarios()
             self._mostrar_mensaje(f"Caso '{caso_data['caso_id']}' guardado")
             return
-
-    def _verificar_datos_pendientes(self) -> None:
-        """Verifica si hay datos pendientes de los diálogos."""
-        # Verificar artefactos
-        data = getattr(self.app, "_temp_artefacto_data", None)
-        if data:
-            self._mostrar_mensaje(f"DEBUG: Guardando artefacto: {data['codigo']}")
-            delattr(self.app, "_temp_artefacto_data")
-
-            # Obtener ID si existe
-            artefacto_id = data.get("id")
-
-            try:
-                # Guardar en BD
-                guardar_artefacto(
-                    artefacto_id,
-                    data["codigo"],
-                    data["repo"],
-                    data["nombre"],
-                    data.get("descripcion", ""),
-                )
-                # Recargar desde BD
-                self._artefactos = cargar_artefactos()
-                self._actualizar_tabla_artefactos()
-                self._mostrar_mensaje(f"Artefacto '{data['codigo']}' guardado")
-            except Exception as e:
-                self._mostrar_mensaje(f"ERROR: {e}", "error")
-            return
-
-        # Verificar casos
-        caso_data = getattr(self.app, "_temp_caso_data", None)
-        if caso_data:
-            self._mostrar_mensaje(f"DEBUG: Guardando caso: {caso_data['caso_id']}")
-            delattr(self.app, "_temp_caso_data")
-
-            # Obtener ID si existe
-            caso_id_db = caso_data.get("id")
-
-            try:
-                # Guardar en BD
-                guardar_caso(
-                    caso_id_db,
-                    caso_data["caso_id"],
-                    caso_data["nombre"],
-                    caso_data.get("descripcion", ""),
-                    caso_data["para"],
-                    caso_data.get("cc", []),
-                )
-                # Recargar desde BD
-                self._destinatarios = cargar_destinatarios()
-                self._actualizar_tabla_destinatarios()
-                self._mostrar_mensaje(f"Caso '{caso_data['caso_id']}' guardado")
-            except Exception as e:
-                self._mostrar_mensaje(f"ERROR: {e}", "error")
-            return
-
-        # Volver a verificar después de un tiempo
-        self.set_timer(0.5, self._verificar_datos_pendientes)
 
     def _cargar_datos(self) -> None:
         """Carga los datos desde la base de datos."""
@@ -630,7 +477,6 @@ class PantallaConfiguracion(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Maneja los botones de acción."""
         button_id = event.button.id
-        self._mostrar_mensaje(f"DEBUG: Botón presionado: {button_id}")
 
         # Botón Volver
         if button_id == "btn_volver":
@@ -662,7 +508,7 @@ class PantallaConfiguracion(Screen):
 
     def _agregar_artefacto(self) -> None:
         """Abre el diálogo para agregar un artefacto."""
-        self._mostrar_mensaje("DEBUG: Abriendo diálogo agregar artefacto...")
+
         self.app.push_screen(DialogoAgregarEditarArtefacto())
 
     def _editar_artefacto(self) -> None:
