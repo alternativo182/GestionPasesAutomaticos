@@ -28,7 +28,7 @@ def construir_devops_data(
     Args:
         pase: Datos del pase a producción.
         artefacto: Artefacto a desplegar.
-        artefactos_idx: Índice {codigo: {repo, nombre, descripcion}} cargado desde la base de datos.
+        artefactos_idx: Índice {codigo: {repo, nombre, descripcion}}.
 
     Returns:
         DevOpsFormData con todos los campos mapeados.
