@@ -8,9 +8,8 @@ rem Cambiar al directorio del script (donde está el código)
 cd /d "%~dp0"
 echo Directorio de trabajo: %CD%
 
-rem Obtener versión actual de update_checker.py
-for /f "tokens=2 delims== " %%a in ('findstr "__version__" "utils\update_checker.py"') do set VERSION=%%a
-set VERSION=%VERSION:"=%
+rem Obtener versión actual de update_checker.py usando Python
+for /f "delims=" %%i in ('python get_version.py') do set VERSION=%%i
 echo Versión actual: v%VERSION%
 echo.
 
@@ -24,7 +23,6 @@ rem Build con PyInstaller
 echo [2/4] Compilando exe...
 pyinstaller --name "GestionPases" ^
     --onedir ^
-    --add-data "config;config" ^
     --add-data "tui;tui" ^
     --collect-all textual ^
     --collect-all playwright ^
