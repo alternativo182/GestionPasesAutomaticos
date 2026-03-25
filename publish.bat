@@ -7,8 +7,8 @@ echo.
 rem Cambiar al directorio del script
 cd /d "%~dp0"
 
-rem Obtener versión actual de update_checker.py usando PowerShell
-for /f "delims=" %%a in ('powershell -Command "(Select-String -Path 'utils\update_checker.py' -Pattern '__version__' | ForEach-Object { $_.Line -replace '.*__version__ = \"(.*)\".*', '$1' })"') do set CURRENT_VERSION=%%a
+rem Obtener versión actual de update_checker.py
+for /f %%i in ('powershell -Command "((Get-Content utils\update_checker.py) -match ''^__version__'').Replace(''__version__ = '''", '''').Replace(''"'', '''').Trim()"') do set CURRENT_VERSION=%%i
 
 rem Pedir versión
 set /p VERSION="Ingresá la versión (actual: v%CURRENT_VERSION%): "
