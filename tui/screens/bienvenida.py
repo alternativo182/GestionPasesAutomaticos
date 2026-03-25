@@ -4,10 +4,18 @@ from textual.widgets import Button, Footer, Header, Label
 from textual.containers import Center, Middle
 
 from tui import APP_TITLE
+from utils.update_checker import __version__
 
 
 class PantallaBienvenida(Screen):
     """Pantalla de bienvenida del sistema de pases a producción."""
+
+    CSS = """
+    #version-label {
+        color: $text-muted;
+        margin-top: 1;
+    }
+    """
 
     BINDINGS = [
         ("q", "quit", "Salir"),
@@ -26,6 +34,7 @@ class PantallaBienvenida(Screen):
                 Button("Nuevo Pase", id="btn_nuevo_pase", variant="success"),
                 Button("Configuración", id="btn_configuracion", variant="primary"),
                 Button("Salir", id="btn_salir", variant="default"),
+                Label(f"v{__version__}", id="version-label"),
             )
         )
         yield Footer()
