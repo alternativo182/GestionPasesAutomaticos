@@ -114,10 +114,17 @@ def inicializar_db() -> None:
             )
         """)
 
-        # Si no hay datos, cargar desde JSON legacy
+        # Si no hay datos, cargar desde seed data o JSON legacy
         cursor.execute("SELECT COUNT(*) as count FROM artefactos")
         if cursor.fetchone()["count"] == 0:
-            _cargar_desde_json_legacy(cursor)
+            # Primero intentar con seed data (datos incluidos en el código)
+            from utils.seed_data import seed_database
+
+            inserted = seed_database(cursor)
+
+            # Si no hay seed data, intentar con JSON legacy (compatibilidad)
+            if inserted == 0:
+                _cargar_desde_json_legacy(cursor)
 
         conn.commit()
     finally:
