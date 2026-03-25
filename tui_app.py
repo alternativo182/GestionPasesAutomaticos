@@ -3,6 +3,7 @@ from textual.app import App, ComposeResult
 from tui import APP_TITLE
 from tui.screens.bienvenida import PantallaBienvenida
 from tui.screens.update_dialog import UpdateDialog
+from utils.browser_resolver import get_browser_path, get_cache_info
 from utils.config_loader import cargar_artefactos, cargar_destinatarios, inicializar_db
 from utils.update_checker import check_for_updates
 
@@ -14,9 +15,16 @@ class TUIApp(App):
     TITLE = APP_TITLE
     BINDINGS = [("q", "quit", "Salir")]
 
+    def __init__(self):
+        super().__init__()
+        self.browser_path = None
+
     async def on_mount(self) -> None:
         # Inicializar base de datos SQLite
         inicializar_db()
+
+        # Verificar browser de Playwright
+        self.browser_path = get_browser_path()
 
         self.artefactos_idx = cargar_artefactos()
         self.destinatarios = cargar_destinatarios()
@@ -25,6 +33,12 @@ class TUIApp(App):
         self.check_updates_background()
 
         await self.push_screen(PantallaBienvenida())
+
+    def get_browser_executable(self):
+        """Retorna la ruta al ejecutable de Chrome para Playwright."""
+        if self.browser_path is None:
+            self.browser_path = get_browser_path()
+        return self.browser_path
 
     def check_updates_background(self) -> None:
         """Verifica actualizaciones y muestra diálogo si hay una nueva versión."""

@@ -23,18 +23,18 @@ echo Versión a publicar: v%VERSION%
 echo.
 
 rem Actualizar versión en update_checker.py
-echo [1/6] Actualizando versión en update_checker.py...
+echo [1/5] Actualizando versión en update_checker.py...
 python update_version.py %VERSION%
 echo [OK] Versión actualizada a %VERSION%
 
 rem Limpiar builds anteriores
-echo [2/6] Limpiando builds anteriores...
+echo [2/5] Limpiando builds anteriores...
 if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
 if exist *.spec del *.spec
 
 rem Build con PyInstaller
-echo [3/6] Compilando exe...
+echo [3/5] Compilando exe...
 pyinstaller --name "GestionPases" ^
     --onedir ^
     --add-data "config;config" ^
@@ -49,30 +49,29 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Copiar browsers de Playwright
-echo [4/6] Copiando Chromium...
-xcopy /s /e /y "%LOCALAPPDATA%\ms-playwright\chromium-*" "dist\GestionPases\_internal\ms-playwright\" >nul
-
-rem Crear ZIP
-echo [5/6] Creando ZIP...
+rem Crear ZIP (sin Chromium - el browser se descarga en cache del usuario)
+echo [4/5] Creando ZIP...
 powershell -Command "Compress-Archive -Path 'dist\GestionPases' -DestinationPath 'dist\GestionPases.zip' -CompressionLevel Optimal -Force"
 
+rem Mostrar tamaño del ZIP
+for %%I in ("dist\GestionPases.zip") do echo [OK] ZIP creado: %%~zI bytes
+
 rem Commit y push de la nueva versión
-echo [6/6] Guardando cambios en Git...
-git add utils/update_checker.py
+echo [5/5] Guardando cambios en Git...
+git add utils/update_checker.py utils/browser_resolver.py tui_app.py main.py
 git commit -m "chore: actualizar versión a v%VERSION%"
-git push origin dev
+git push origin browserBaseFeat
 git checkout main
-git merge dev
+git merge browserBaseFeat
 git push origin main
-git checkout dev
+git checkout browserBaseFeat
 
 rem Crear Release en GitHub
 echo.
 echo Publicando Release v%VERSION% en GitHub...
 gh release create v%VERSION% "dist\GestionPases.zip" ^
     --title "GestionPases v%VERSION%" ^
-    --notes "Versión %VERSION% empaquetada como .exe" ^
+    --notes "Versión %VERSION% - Browser se instala en cache del usuario" ^
     --target main
 
 if errorlevel 1 (
@@ -89,6 +88,9 @@ echo ========================================
 echo.
 echo  Versión: v%VERSION%
 echo  Release: https://github.com/alternativo182/GestionPasesAutomaticos/releases/tag/v%VERSION%
+echo.
+echo  El browser Chromium se instala en cache del usuario:
+echo  %%LOCALAPPDATA%%\GestionPases\cache\ms-playwright\
 echo.
 echo  Instalación remota:
 echo  irm https://raw.githubusercontent.com/alternativo182/GestionPasesAutomaticos/main/install.ps1 ^| iex

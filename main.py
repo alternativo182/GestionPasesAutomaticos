@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime
 from typing import TextIO
 
@@ -12,6 +13,7 @@ from forms.formulario_devops import completar_formulario_devops
 from forms.formulario_manual import completar_formulario_manual
 from models import ArtefactoInput, Caso, PaseData
 from outlook.correo import construir_correo, enviar_correo, esperar_login
+from utils.browser_resolver import get_browser_path
 from utils.config_loader import cargar_artefactos, cargar_destinatarios
 
 # URL fija del formulario de Microsoft Forms para pases SICO
@@ -21,6 +23,7 @@ FORMS_URL = "https://forms.office.com/Pages/ResponsePage.aspx?id=eQz1rjw3-UeC7n-
 # ---------------------------------------------------------------------------
 # 9.1 — Determinación de caso
 # ---------------------------------------------------------------------------
+
 
 def determinar_caso(artefactos: list[ArtefactoInput], ruta_scripts: str | None) -> Caso:
     """Retorna Caso.UNO, Caso.DOS o Caso.TRES según las reglas de negocio.
@@ -53,6 +56,7 @@ def determinar_caso(artefactos: list[ArtefactoInput], ruta_scripts: str | None) 
 # ---------------------------------------------------------------------------
 # 9.3 — Recolección de inputs
 # ---------------------------------------------------------------------------
+
 
 def recolectar_inputs(artefactos_idx: dict[str, dict]) -> PaseData:
     """Solicita todos los inputs al usuario por consola y retorna PaseData validado.
@@ -182,10 +186,29 @@ def main() -> None:
     destinatarios = cargar_destinatarios()
     pase = recolectar_inputs(artefactos_idx)
 
+    # Obtener ruta del browser desde cache
+    browser_path = get_browser_path()
+    if browser_path is None:
+        mostrar_progreso("✗ ERROR: No se encontró Chromium.")
+        mostrar_progreso("  Ejecute install.ps1 para instalar el browser.")
+        mostrar_progreso(
+            "  O descargue manualmente: https://playwright.dev/docs/browsers"
+        )
+        return
+
+    mostrar_progreso(f"✓ Browser encontrado: {browser_path}")
+
     with sync_playwright() as p:
         # Usar perfil persistente para conservar cookies de sesión entre ejecuciones
         # Esto evita tener que hacer login + MFA en cada ejecución
-        user_data_dir = os.path.join(os.path.expanduser("~"), ".automatizacion_pases_profile")
+        user_data_dir = os.path.join(
+            os.path.expanduser("~"), ".automatizacion_pases_profile"
+        )
+        browser = p.chromium.launch_persistent_context(
+            user_data_dir,
+            headless=False,
+            executable_path=str(browser_path),
+        )
         browser = p.chromium.launch_persistent_context(
             user_data_dir,
             headless=False,
@@ -193,7 +216,9 @@ def main() -> None:
         page = browser.new_page()
         try:
             # 1. Login en Forms primero (para que la sesión quede autenticada)
-            mostrar_progreso("Abriendo Microsoft Forms... Si pide login, complete el MFA (tiene hasta 5 minutos).")
+            mostrar_progreso(
+                "Abriendo Microsoft Forms... Si pide login, complete el MFA (tiene hasta 5 minutos)."
+            )
             esperar_login_forms(page, pase.forms_url)
             mostrar_progreso("✓ Login en Forms completado")
 
@@ -222,4 +247,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     from tui_app import TUIApp
+
     TUIApp().run()
