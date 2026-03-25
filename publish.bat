@@ -11,7 +11,7 @@ rem Obtener versión actual de update_checker.py usando Python
 for /f "delims=" %%i in ('python get_version.py') do set CURRENT_VERSION=%%i
 
 rem Pedir versión
-set /p VERSION="Ingresá la versión (actual: v%CURRENT_VERSION%): "
+set /p VERSION="Ingresa la version (actual: v%CURRENT_VERSION%): "
 if "%VERSION%"=="" (
     echo ERROR: No se ingresó versión
     pause
