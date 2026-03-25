@@ -57,17 +57,27 @@ try {
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 5. Crear shortcut en Start Menu
-    Write-Step "Creando acceso directo..."
-    $startMenu = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs"
-    $shortcutPath = "$startMenu\$AppName.lnk"
+    # 5. Crear shortcuts
+    Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
-    $shortcut = $WshShell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = "$InstallDir\$AppName\GestionPases.exe"
-    $shortcut.WorkingDirectory = "$InstallDir\$AppName"
-    $shortcut.Description = "Gestión de Pases Automáticos - SICO"
-    $shortcut.Save()
+    
+    # Start Menu
+    $startMenu = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs"
+    $shortcutMenu = $WshShell.CreateShortcut("$startMenu\$AppName.lnk")
+    $shortcutMenu.TargetPath = "$InstallDir\$AppName\GestionPases.exe"
+    $shortcutMenu.WorkingDirectory = "$InstallDir\$AppName"
+    $shortcutMenu.Description = "Gestión de Pases Automáticos - SICO"
+    $shortcutMenu.Save()
     Write-Ok "Acceso directo creado en Menú Inicio"
+    
+    # Desktop
+    $desktop = [Environment]::GetFolderPath("Desktop")
+    $shortcutDesk = $WshShell.CreateShortcut("$desktop\$AppName.lnk")
+    $shortcutDesk.TargetPath = "$InstallDir\$AppName\GestionPases.exe"
+    $shortcutDesk.WorkingDirectory = "$InstallDir\$AppName"
+    $shortcutDesk.Description = "Gestión de Pases Automáticos - SICO"
+    $shortcutDesk.Save()
+    Write-Ok "Acceso directo creado en Escritorio"
     
     # 6. Resumen
     Write-Host ""
