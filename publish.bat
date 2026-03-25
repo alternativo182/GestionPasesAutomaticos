@@ -37,7 +37,6 @@ rem Build con PyInstaller
 echo [3/5] Compilando exe...
 pyinstaller --name "GestionPases" ^
     --onedir ^
-    --add-data "config;config" ^
     --add-data "tui;tui" ^
     --collect-all textual ^
     --collect-all playwright ^
