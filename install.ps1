@@ -72,19 +72,7 @@ try {
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 5. Instalar Chromium (si no está ya instalado)
-    Write-Step "Instalando navegador Chromium..."
-    $chromiumPath = "$env:LOCALAPPDATA\ms-playwright\chromium-*"
-    if (-not (Test-Path $chromiumPath)) {
-        & "$InstallDir\$AppName\GestionPases.exe" playwright install chromium 2>$null
-        # Alternativa: usar Python si está disponible
-        python -m playwright install chromium 2>$null
-        Write-Ok "Chromium instalado"
-    } else {
-        Write-Ok "Chromium ya instalado"
-    }
-    
-    # 6. Crear shortcuts
+    # 5. Crear shortcuts
     Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
     
@@ -106,7 +94,7 @@ try {
     $shortcutDesk.Save()
     Write-Ok "Acceso directo creado en Escritorio"
     
-    # 7. Resumen
+    # 6. Resumen
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "   INSTALACIÓN COMPLETADA" -ForegroundColor Green
