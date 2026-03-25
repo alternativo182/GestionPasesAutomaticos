@@ -2,6 +2,9 @@
 
 Este módulo contiene los datos semilla que se cargan cuando
 la base de datos está vacía (primera instalación).
+
+Editá SEED_ARTEFACTOS y SEED_DESTINATARIOS para agregar
+datos iniciales que se distribuirán con cada release.
 """
 
 from __future__ import annotations
@@ -16,22 +19,22 @@ import sqlite3
 
 SEED_ARTEFACTOS = [
     # (codigo, repo, nombre, descripcion)
-    # Ejemplo:
+    # Ejemplo descomentar para probar:
     # ("SICO-BE", "org/repo-backend", "SICO Backend", "API principal"),
-    # ("SICO-FE", "org/repo-frontend", "SICO Frontend", "Interfaz web"),
 ]
 
 SEED_DESTINATARIOS = [
     # (caso_id, nombre, descripcion, para, cc)
-    # Ejemplo:
-    # ("UNO", "DevOps Team", "Solo artefactos", "devops@empresa.com", "gerente@empresa.com"),
-    # ("DOS", "DBA Team", "Solo scripts BD", "dba@empresa.com", ""),
-    # ("TRES", "Completo", "Artefactos + BD", "devops@empresa.com,dba@empresa.com", ""),
+    # Ejemplo descomentar para probar:
+    # ("UNO", "DevOps Team", "Solo artefactos", "devops@empresa.com", ""),
 ]
 
 
 def seed_database(cursor: sqlite3.Cursor) -> int:
     """Carga datos iniciales si la base de datos está vacía.
+
+    Args:
+        cursor: Cursor de SQLite activo.
 
     Returns:
         Número de registros insertados.
