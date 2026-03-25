@@ -1,7 +1,9 @@
 """Módulo de carga de configuración usando SQLite."""
 
+import os
 import sqlite3
 import sys
+import shutil
 from pathlib import Path
 
 from exceptions import ConfigError
@@ -21,9 +23,56 @@ def _get_base_dir() -> Path:
         return Path(__file__).parent.parent
 
 
-# Ruta de la base de datos (relativa al directorio base)
+def _get_data_dir() -> Path:
+    """Obtiene el directorio de datos persistente del usuario.
+
+    Los datos se guardan en %LOCALAPPDATA%\GestionPases\data\
+    para persistir entre actualizaciones del programa.
+    """
+    if getattr(sys, "frozen", False):
+        # En modo exe: usar carpeta de datos persistente
+        return Path(os.environ.get("LOCALAPPDATA", "")) / "GestionPases" / "data"
+    else:
+        # En modo desarrollo: usar config/ local
+        return _get_base_dir() / "config"
+
+
+def _migrate_db_if_needed(data_dir: Path, base_dir: Path) -> None:
+    """Migra la base de datos desde la ubicación vieja si existe.
+
+    Antes, la DB estaba en {base_dir}/config/config.db
+    Ahora, la DB está en {data_dir}/config.db
+
+    Si la DB vieja existe y la nueva no, la migra.
+    """
+    old_db = base_dir / "config" / "config.db"
+    new_db = data_dir / "config.db"
+
+    # Si la nueva ya existe, no hacer nada
+    if new_db.exists():
+        return
+
+    # Si la vieja existe y la nueva no, migrar
+    if old_db.exists():
+        data_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copy2(old_db, new_db)
+            print(f"[INFO] Base de datos migrada a: {new_db}")
+        except Exception as e:
+            print(f"[WARN] No se pudo migrar la DB: {e}")
+
+
+# Directorio base del programa (donde está el exe)
 BASE_DIR = _get_base_dir()
-DB_PATH = BASE_DIR / "config" / "config.db"
+
+# Directorio de datos persistente del usuario
+DATA_DIR = _get_data_dir()
+
+# Migrar DB si es necesario (antes de cualquier otra cosa)
+_migrate_db_if_needed(DATA_DIR, BASE_DIR)
+
+# Ruta de la base de datos (en carpeta de datos persistente)
+DB_PATH = DATA_DIR / "config.db"
 
 
 def _get_connection() -> sqlite3.Connection:

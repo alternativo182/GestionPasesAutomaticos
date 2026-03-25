@@ -10,8 +10,10 @@
 # Configuración
 $Repo = "alternativo182/GestionPasesAutomaticos"
 $AppName = "GestionPases"
-$InstallDir = "$env:LOCALAPPDATA\GestionPases"
-$CacheDir = "$env:LOCALAPPDATA\GestionPases\cache\ms-playwright"
+$BaseDir = "$env:LOCALAPPDATA\GestionPases"          # Directorio base
+$InstallDir = "$BaseDir\app"                         # Programa (se reemplaza en updates)
+$DataDir = "$BaseDir\data"                           # Datos del usuario (PERSISTE)
+$CacheDir = "$BaseDir\cache\ms-playwright"           # Browser Chromium (PERSISTE)
 $BrowserVersion = "chromium-1208"
 
 # Colores para output
@@ -97,8 +99,8 @@ try {
     
     Write-Ok "Versión encontrada: $version"
     
-    # 3. Crear directorio de instalación
-    Write-Step "Preparando directorio de instalación..."
+    # 3. Crear directorios necesarios
+    Write-Step "Preparando directorios..."
     
     # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
     $maxAttempts = 10
@@ -114,11 +116,21 @@ try {
         }
     }
     
-    if (Test-Path $InstallDir) {
-        Remove-Item $InstallDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
+    # Crear directorios (data y cache persisten entre actualizaciones)
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
-    Write-Ok "Directorio: $InstallDir"
+    New-Item -ItemType Directory -Path $DataDir -Force | Out-Null
+    
+    # Migrar DB desde ubicación vieja si existe (compatibilidad hacia atrás)
+    $oldDbPath = "$BaseDir\config\config.db"
+    $newDbPath = "$DataDir\config.db"
+    if ((Test-Path $oldDbPath) -and (-not (Test-Path $newDbPath))) {
+        Write-Step "Migrando base de datos a nueva ubicación..."
+        Copy-Item -Path $oldDbPath -Destination $newDbPath -Force
+        Write-Ok "Base de datos migrada a: $DataDir"
+    }
+    
+    Write-Ok "Directorio del programa: $InstallDir"
+    Write-Ok "Directorio de datos: $DataDir (persiste entre actualizaciones)"
     
     # 4. Descargar (sin Chromium - solo exe + dependencias Python)
     Write-Step "Descargando $AppName v$version ($([math]::Round($asset.size/1MB, 1)) MB)..."
@@ -161,13 +173,18 @@ try {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "  Versión:     $version"
-    Write-Host "  Ubicación:   $InstallDir\$AppName"
-    Write-Host "  Ejecutable:  GestionPases.exe"
+    Write-Host "  Ejecutable:  $InstallDir\$AppName\GestionPases.exe"
+    Write-Host "  Datos:       $DataDir (PERSISTE entre actualizaciones)"
     Write-Host "  Browser:     $CacheDir (cache local)"
     Write-Host ""
+    Write-Host "  Estructura de carpetas:"
+    Write-Host "    $BaseDir\"
+    Write-Host "    ├── app\       ← Se actualiza con cada release"
+    Write-Host "    ├── data\      ← Tus configuraciones (se conservan)"
+    Write-Host "    └── cache\     ← Browser Chromium"
+    Write-Host ""
     Write-Host "  Puedes ejecutarlo desde:"
-    Write-Host "  - El acceso directo en Menú Inicio"
-    Write-Host "  - Doble click en $InstallDir\$AppName\GestionPases.exe"
+    Write-Host "  - El acceso directo en Menú Inicio/Escritorio"
     Write-Host ""
     
     # Preguntar si quiere ejecutar ahora
