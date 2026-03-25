@@ -14,7 +14,6 @@ $BaseDir = "$env:LOCALAPPDATA\GestionPases"          # Directorio base
 $InstallDir = "$BaseDir\app"                         # Programa (se reemplaza en updates)
 $DataDir = "$BaseDir\data"                           # Datos del usuario (PERSISTE)
 $CacheDir = "$BaseDir\cache\ms-playwright"           # Browser Chromium (PERSISTE)
-$BrowserVersion = "chromium-1208"
 
 # Colores para output
 function Write-Step { param($msg) Write-Host "[*] $msg" -ForegroundColor Cyan }
@@ -31,56 +30,38 @@ Write-Host ""
 
 try {
     # 1. Verificar/Instalar browser Chromium (solo la primera vez)
-    $browserExe = "$CacheDir\$BrowserVersion\chrome-win64\chrome.exe"
-    if (-not (Test-Path $browserExe)) {
+    # Buscar si ya existe algún chromium instalado
+    $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    
+    if (-not $existingChrome) {
         Write-Step "Primera instalación: configurando browser Chromium..."
         Write-Warn "Esto descargará ~400MB solo la primera vez"
         
         # Crear directorio de cache
         New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
         
-        # Descargar browser desde el CDN de Playwright
+        # Descargar browser usando Playwright CLI (instala la versión correcta automáticamente)
         Write-Step "Descargando Chromium (~400MB)..."
-        $browserUrl = "https://playwright.azureedge.net/builds/chromium/1155/chromium-win64.zip"
-        $browserZip = "$env:TEMP\chromium.zip"
         
         try {
-            # Intentar descargar desde CDN de Playwright
-            Invoke-WebRequest -Uri $browserUrl -OutFile $browserZip -UseBasicParsing
+            # Usar npx playwright install que descarga la versión correcta automáticamente
+            $env:PLAYWRIGHT_BROWSERS_PATH = $CacheDir
+            & npx.cmd playwright install chromium 2>&1 | Out-Null
         } catch {
-            # Si falla, mostrar instrucciones manuales
             Write-Warn "No se pudo descargar automáticamente."
             Write-Host ""
             Write-Host "  Instale Chromium manualmente:" -ForegroundColor Yellow
-            Write-Host "  1. Abra PowerShell como administrador" -ForegroundColor Yellow
-            Write-Host "  2. Ejecute: npx playwright install chromium" -ForegroundColor Yellow
-            Write-Host "  3. O descargue desde: https://playwright.dev/docs/browsers" -ForegroundColor Yellow
+            Write-Host "  1. Ejecute: npx playwright install chromium" -ForegroundColor Yellow
+            Write-Host "  2. O descargue desde: https://playwright.dev/docs/browsers" -ForegroundColor Yellow
             Write-Host ""
-            
-            # Intentar usar npx playwright install
-            Write-Step "Intentando instalar con Playwright CLI..."
-            $env:PLAYWRIGHT_BROWSERS_PATH = $CacheDir
-            npx playwright install chromium
-            if (Test-Path $browserExe) {
-                Write-Ok "Browser instalado correctamente"
-            } else {
-                Write-Warn "Continuando sin browser - se intentará al ejecutar la app"
-            }
-        } finally {
-            if (Test-Path $browserZip) {
-                Remove-Item $browserZip -Force
-            }
         }
         
-        # Si se descargó el zip, extraerlo
-        if (Test-Path $browserZip) {
-            Write-Step "Extrayendo Chromium..."
-            Expand-Archive -Path $browserZip -DestinationPath $CacheDir -Force
-            Remove-Item $browserZip -Force
-        }
-        
-        if (Test-Path $browserExe) {
-            Write-Ok "Browser instalado en: $CacheDir"
+        # Verificar si se instaló
+        $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($existingChrome) {
+            Write-Ok "Browser instalado en: $($existingChrome.DirectoryName)"
+        } else {
+            Write-Warn "Browser no encontrado. La app podría no funcionar."
         }
     } else {
         Write-Ok "Browser Chromium ya instalado en cache"
