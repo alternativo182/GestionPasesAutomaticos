@@ -82,7 +82,7 @@ def recolectar_inputs(artefactos_idx: dict[str, dict]) -> PaseData:
         if codigo not in artefactos_idx:
             raise ValidationError(
                 f"Código de artefacto desconocido: '{codigo}'. "
-                "Verifique artefactos.json."
+                "Verifique la configuración."
             )
         url = input(f"URL release {i + 1}: ")
         artefactos.append(ArtefactoInput(codigo=codigo, url_release=url))

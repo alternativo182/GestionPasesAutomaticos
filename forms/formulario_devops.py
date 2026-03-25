@@ -1,7 +1,12 @@
 from playwright.sync_api import Page
 
 from exceptions import FormsError
-from forms.formulario_base import construir_base_data, completar_campos_base, esperar_formulario_listo, esperar_envio_manual
+from forms.formulario_base import (
+    construir_base_data,
+    completar_campos_base,
+    esperar_formulario_listo,
+    esperar_envio_manual,
+)
 from models import PaseData, ArtefactoInput, DevOpsFormData
 
 
@@ -23,7 +28,7 @@ def construir_devops_data(
     Args:
         pase: Datos del pase a producción.
         artefacto: Artefacto a desplegar.
-        artefactos_idx: Índice {codigo: {repo, nombre, descripcion}} cargado desde artefactos.json.
+        artefactos_idx: Índice {codigo: {repo, nombre, descripcion}}.
 
     Returns:
         DevOpsFormData con todos los campos mapeados.
@@ -62,7 +67,7 @@ def completar_formulario_devops(
         forms_url: URL del formulario de Microsoft Forms.
         pase: Datos del pase a producción.
         artefacto: Artefacto a desplegar.
-        artefactos_idx: Índice de artefactos cargado desde artefactos.json.
+        artefactos_idx: Índice de artefactos cargado desde la base de datos.
 
     Raises:
         FormsError: Si ocurre cualquier error durante la automatización.
@@ -76,7 +81,9 @@ def completar_formulario_devops(
         completar_campos_base(page, base_data)
 
         # 3. Input 9 — Método pase: seleccionar "DevOps" y esperar inputs 10-18
-        page.click('div[aria-labelledby^="QuestionId_r1fd586e16e944bf4924ce92e32790e87"]')
+        page.click(
+            'div[aria-labelledby^="QuestionId_r1fd586e16e944bf4924ce92e32790e87"]'
+        )
         page.wait_for_selector('[role="listbox"]', state="visible")
         page.click('[role="option"]:has-text("DevOps")')
 
@@ -95,7 +102,9 @@ def completar_formulario_devops(
         )
 
         # Input 11 — Servidor (dropdown → "Anthos")
-        page.click('div[aria-labelledby^="QuestionId_rf9b9c647dd8c4d0a811e899da88ea094"]')
+        page.click(
+            'div[aria-labelledby^="QuestionId_rf9b9c647dd8c4d0a811e899da88ea094"]'
+        )
         page.wait_for_selector('[role="listbox"]', state="visible")
         page.click('[role="option"]:has-text("Anthos")')
 
@@ -115,7 +124,9 @@ def completar_formulario_devops(
         )
 
         # Input 15 — Proyecto DEVOPS (dropdown)
-        page.click('div[aria-labelledby^="QuestionId_r5ac855f36819495a8f684b8c69667c0b"]')
+        page.click(
+            'div[aria-labelledby^="QuestionId_r5ac855f36819495a8f684b8c69667c0b"]'
+        )
         page.wait_for_selector('[role="listbox"]', state="visible")
         page.click(f'[role="option"]:has-text("{devops_data.proyecto_devops}")')
 
