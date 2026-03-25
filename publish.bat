@@ -49,16 +49,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Copiar browsers de Playwright
-echo [4/6] Copiando Chromium...
-xcopy /s /e /y "%LOCALAPPDATA%\ms-playwright\chromium-*" "dist\GestionPases\_internal\ms-playwright\" >nul
-
 rem Crear ZIP
-echo [5/6] Creando ZIP...
+echo [4/5] Creando ZIP...
 powershell -Command "Compress-Archive -Path 'dist\GestionPases' -DestinationPath 'dist\GestionPases.zip' -CompressionLevel Optimal -Force"
 
 rem Commit y push de la nueva versión
-echo [6/6] Guardando cambios en Git...
+echo [5/5] Guardando cambios en Git...
 git add utils/update_checker.py
 git commit -m "chore: actualizar versión a v%VERSION%"
 git push origin dev

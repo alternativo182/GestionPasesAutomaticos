@@ -15,13 +15,13 @@ echo Versión actual: v%VERSION%
 echo.
 
 rem Limpiar builds anteriores
-echo [1/4] Limpiando builds anteriores...
+echo [1/3] Limpiando builds anteriores...
 if exist dist rmdir /s /q dist
 if exist build rmdir /s /q build
 if exist *.spec del *.spec
 
 rem Build con PyInstaller
-echo [2/4] Compilando exe...
+echo [2/3] Compilando exe...
 pyinstaller --name "GestionPases" ^
     --onedir ^
     --add-data "config;config" ^
@@ -37,12 +37,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem Copiar browsers de Playwright
-echo [3/4] Copiando Chromium...
-xcopy /s /e /y "%LOCALAPPDATA%\ms-playwright\chromium-*" "dist\GestionPases\_internal\ms-playwright\" >nul
-
 rem Crear ZIP
-echo [4/4] Creando ZIP para distribuir...
+echo [3/3] Creando ZIP para distribuir...
 powershell -Command "Compress-Archive -Path 'dist\GestionPases' -DestinationPath 'dist\GestionPases.zip' -CompressionLevel Optimal -Force"
 
 echo.
