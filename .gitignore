@@ -84,3 +84,6 @@ debug_*.png
 # Archivos rar
 *.rar
 
+# Scripts batch (locales de desarrollo)
+*.bat
+
