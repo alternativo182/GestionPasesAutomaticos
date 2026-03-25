@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 
 # Versión actual de la aplicación
-__version__ = "0.9.0"  # Temporal para pruebas - cambiar a "1.0.0" antes de publicar
+__version__ = "1.1.0"
 
 # Repo de GitHub
 GITHUB_REPO = "alternativo182/GestionPasesAutomaticos"
