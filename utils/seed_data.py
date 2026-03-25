@@ -18,19 +18,15 @@ import sqlite3
 # ============================================
 
 SEED_ARTEFACTOS = [
-    # (codigo, repo, nombre, descripcion)
-    # Ejemplo descomentar para probar:
-    # ("cotest", "msc-test", "CORE - Test", "Microservicio core test"),
-    # ("bstest", "msn-test", "BS - Test", "Microservicio business test"),
-    # ("webtest", "web-test", "APP - Test", "Aplicación web test")
+    ("cotest", "msc-test", "CORE - Test", "Microservicio core test"),
+    ("bstest", "msn-test", "BS - Test", "Microservicio business test"),
+    ("webtest", "web-test", "APP - Test", "Aplicación web test")
 ]
 
 SEED_DESTINATARIOS = [
-    # (caso_id, nombre, descripcion, para, cc)
-    # Ejemplo descomentar para probar:
-    # ("artefactos", "Caso 1 - Microservicios/Web", "Despliegue de artefactos", "test@test.com", ""),
-    # ("scripts", "Caso 2 - Base de Datos", "Despliegue de scripts", "test@test.com", ""),
-    # ("mixto", "Caso 3 - Microservicios/Web + BD", "Despliegue de artefactos y scripts", "test@test.com", "")
+    ("artefactos", "Caso 1 - Microservicios/Web", "Despliegue de artefactos", "test@test.com", ""),
+    ("scripts", "Caso 2 - Base de Datos", "Despliegue de scripts", "test@test.com", ""),
+    ("mixto", "Caso 3 - Microservicios/Web + BD", "Despliegue de artefactos y scripts", "test@test.com", "")
 
 ]
 
