@@ -1,5 +1,4 @@
 import re
-import sys
 
 with open("utils/update_checker.py", "r", encoding="utf-8") as f:
     content = f.read()
