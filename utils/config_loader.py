@@ -1,12 +1,29 @@
 """Módulo de carga de configuración usando SQLite."""
 
 import sqlite3
+import sys
 from pathlib import Path
 
 from exceptions import ConfigError
 
-# Ruta de la base de datos
-DB_PATH = Path("config/config.db")
+
+def _get_base_dir() -> Path:
+    """Obtiene el directorio base del proyecto.
+
+    Si está ejecutando como exe empaquetado (PyInstaller),
+    busca la base en el directorio del ejecutable.
+    """
+    if getattr(sys, "frozen", False):
+        # Ejecutando como exe empaquetado por PyInstaller
+        return Path(sys.executable).parent
+    else:
+        # Ejecutando como script Python normal
+        return Path(__file__).parent.parent
+
+
+# Ruta de la base de datos (relativa al directorio base)
+BASE_DIR = _get_base_dir()
+DB_PATH = BASE_DIR / "config" / "config.db"
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -63,7 +80,7 @@ def _cargar_desde_json_legacy(cursor: sqlite3.Cursor) -> None:
     import json
 
     # Cargar artefactos
-    json_path = Path("config/artefactos.json")
+    json_path = BASE_DIR / "config" / "artefactos.json"
     if json_path.exists():
         try:
             with open(json_path, encoding="utf-8") as f:
@@ -82,7 +99,7 @@ def _cargar_desde_json_legacy(cursor: sqlite3.Cursor) -> None:
             pass
 
     # Cargar destinatarios
-    json_path = Path("config/destinatarios.json")
+    json_path = BASE_DIR / "config" / "destinatarios.json"
     if json_path.exists():
         try:
             with open(json_path, encoding="utf-8") as f:
