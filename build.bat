@@ -7,6 +7,11 @@ echo.
 rem Cambiar al directorio del script (donde está el código)
 cd /d "%~dp0"
 echo Directorio de trabajo: %CD%
+
+rem Obtener versión actual de update_checker.py
+for /f "tokens=2 delims== " %%a in ('findstr "__version__" "utils\update_checker.py"') do set VERSION=%%a
+set VERSION=%VERSION:"=%
+echo Versión actual: v%VERSION%
 echo.
 
 rem Limpiar builds anteriores
@@ -45,8 +50,12 @@ echo ========================================
 echo   BUILD COMPLETADO EXITOSAMENTE
 echo ========================================
 echo.
+echo  Versión: v%VERSION%
+echo.
 echo Archivos generados:
 echo   - dist\GestionPases\      (carpeta para probar)
 echo   - dist\GestionPases.zip   (ZIP para distribuir)
+echo.
+echo Para publicar este release, ejecutá publish.bat
 echo.
 pause
