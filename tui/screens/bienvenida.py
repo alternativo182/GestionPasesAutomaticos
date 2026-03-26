@@ -42,9 +42,14 @@ class PantallaBienvenida(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn_nuevo_pase":
             from tui.screens.formulario import PantallaFormulario  # noqa: PLC0415
+            from utils.config_loader import cargar_artefactos, cargar_destinatarios
 
-            # Obtener mapeo nombre -> código para el dropdown (datos actualizados)
-            artefactos_idx = getattr(self.app, "artefactos_idx", {})
+            # Recargar datos frescos antes de mostrar el formulario
+            artefactos_idx = cargar_artefactos()
+            self.app.artefactos_idx = artefactos_idx
+            self.app.destinatarios = cargar_destinatarios()
+
+            # Obtener mapeo nombre -> código para el dropdown
             nombre_a_codigo = {
                 artefactos.get("nombre", codigo): codigo
                 for codigo, artefactos in artefactos_idx.items()
@@ -59,7 +64,6 @@ class PantallaBienvenida(Screen):
 
     def on_show(self) -> None:
         """Se ejecuta cada vez que se muestra la pantalla - recarga datos actualizados."""
-        # Actualizar los datos en la app desde la DB
         from utils.config_loader import cargar_artefactos, cargar_destinatarios
 
         self.app.artefactos_idx = cargar_artefactos()
