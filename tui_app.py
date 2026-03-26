@@ -2,6 +2,7 @@ from textual.app import App, ComposeResult
 
 from tui import APP_TITLE
 from tui.screens.bienvenida import PantallaBienvenida
+from tui.screens.configuracion import ConfiguracionActualizada
 from tui.screens.update_dialog import UpdateDialog
 from utils.browser_resolver import get_browser_path, get_cache_info
 from utils.config_loader import cargar_artefactos, cargar_destinatarios, inicializar_db
@@ -33,6 +34,11 @@ class TUIApp(App):
         self.check_updates_background()
 
         await self.push_screen(PantallaBienvenida())
+
+    def on_configuracion_actualizada(self, event: ConfiguracionActualizada) -> None:
+        """Actualiza los datos globales cuando la configuración cambia."""
+        self.artefactos_idx = cargar_artefactos()
+        self.destinatarios = cargar_destinatarios()
 
     def get_browser_executable(self):
         """Retorna la ruta al ejecutable de Chrome para Playwright."""
