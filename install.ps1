@@ -84,7 +84,12 @@ try {
         Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
     }
     
-    # 2. Obtener última release
+    # 2. Instalar librería Playwright (requerida para automatización)
+    Write-Step "Instalando librería Playwright..."
+    python -m pip install playwright --quiet
+    Write-Ok "Librería Playwright instalada"
+    
+    # 3. Obtener última release
     Write-Step "Buscando última versión..."
     $release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
     $version = $release.tag_name
@@ -97,7 +102,7 @@ try {
     
     Write-Ok "Versión encontrada: $version"
     
-    # 3. Crear directorios necesarios
+    # 4. Crear directorios necesarios
     Write-Step "Preparando directorios..."
     
     # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
@@ -130,19 +135,19 @@ try {
     Write-Ok "Directorio del programa: $InstallDir"
     Write-Ok "Directorio de datos: $DataDir (persiste entre actualizaciones)"
     
-    # 4. Descargar (sin Chromium - solo exe + dependencias Python)
+    # 5. Descargar (sin Chromium - solo exe + dependencias Python)
     Write-Step "Descargando $AppName v$version ($([math]::Round($asset.size/1MB, 1)) MB)..."
     $zipPath = "$env:TEMP\$AppName.zip"
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing
     Write-Ok "Descarga completada"
     
-    # 5. Extraer
+    # 6. Extraer
     Write-Step "Extrayendo archivos..."
     Expand-Archive -Path $zipPath -DestinationPath $InstallDir -Force
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 6. Crear shortcuts
+    # 7. Crear shortcuts
     Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
     
@@ -164,7 +169,7 @@ try {
     $shortcutDesk.Save()
     Write-Ok "Acceso directo creado en Escritorio"
     
-    # 7. Resumen
+    # 8. Resumen
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "   INSTALACIÓN COMPLETADA" -ForegroundColor Green
