@@ -26,6 +26,13 @@ from utils.config_loader import (
 )
 
 
+class ConfiguracionActualizada(Message):
+    """Mensaje emitido cuando se guarda configuración desde la pantalla de configuración."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
 class DialogoAgregarEditarArtefacto(Screen):
     """Diálogo modal para agregar o editar un artefacto."""
 
@@ -655,6 +662,7 @@ class PantallaConfiguracion(Screen):
         try:
             guardar_artefacto(id, codigo, repo, nombre, descripcion)
             self._mostrar_mensaje(f"Artefacto '{codigo}' guardado")
+            self.post_message(ConfiguracionActualizada())
         except Exception as e:
             self._mostrar_mensaje(f"ERROR: {e}", "error")
 
@@ -663,6 +671,7 @@ class PantallaConfiguracion(Screen):
         try:
             eliminar_artefacto(id)
             self._mostrar_mensaje(f"Artefacto eliminado")
+            self.post_message(ConfiguracionActualizada())
         except Exception as e:
             self._mostrar_mensaje(f"ERROR: {e}", "error")
 
@@ -679,6 +688,7 @@ class PantallaConfiguracion(Screen):
         try:
             guardar_caso(id, caso_id, nombre, descripcion, para, cc)
             self._mostrar_mensaje(f"Caso '{caso_id}' guardado")
+            self.post_message(ConfiguracionActualizada())
         except Exception as e:
             self._mostrar_mensaje(f"ERROR: {e}", "error")
 

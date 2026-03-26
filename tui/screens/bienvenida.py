@@ -43,7 +43,7 @@ class PantallaBienvenida(Screen):
         if event.button.id == "btn_nuevo_pase":
             from tui.screens.formulario import PantallaFormulario  # noqa: PLC0415
 
-            # Obtener mapeo nombre -> código para el dropdown
+            # Obtener mapeo nombre -> código para el dropdown (datos actualizados)
             artefactos_idx = getattr(self.app, "artefactos_idx", {})
             nombre_a_codigo = {
                 artefactos.get("nombre", codigo): codigo
@@ -56,6 +56,14 @@ class PantallaBienvenida(Screen):
             self.app.push_screen(PantallaConfiguracion())
         elif event.button.id == "btn_salir":
             self.app.exit()
+
+    def on_show(self) -> None:
+        """Se ejecuta cada vez que se muestra la pantalla - recarga datos actualizados."""
+        # Actualizar los datos en la app desde la DB
+        from utils.config_loader import cargar_artefactos, cargar_destinatarios
+
+        self.app.artefactos_idx = cargar_artefactos()
+        self.app.destinatarios = cargar_destinatarios()
 
     def action_quit(self) -> None:
         self.app.exit()
