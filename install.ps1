@@ -30,8 +30,17 @@ Write-Host ""
 
 try {
     # 1. Verificar/Instalar Python (solo la primera vez)
-    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $pythonCmd) {
+    # Verificar si python funciona realmente (no es solo un alias del Microsoft Store)
+    $pythonWorks = $false
+    try {
+        $result = python --version 2>&1
+        if ($result -match "Python 3\.") {
+            $pythonWorks = $true
+            Write-Ok "Python ya instalado: $result"
+        }
+    } catch {}
+    
+    if (-not $pythonWorks) {
         Write-Step "Primera instalación: instalando Python..."
         Write-Warn "Esto descargará ~30MB solo la primera vez"
         
@@ -53,8 +62,6 @@ try {
         
         Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
         Write-Ok "Python instalado"
-    } else {
-        Write-Ok "Python ya instalado: $(python --version)"
     }
     
     # 2. Verificar/Instalar browser Chromium (solo la primera vez)
