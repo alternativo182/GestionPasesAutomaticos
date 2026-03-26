@@ -119,7 +119,15 @@ try {
         Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
     }
     
-    # 3. Obtener última release
+    # 3. Instalar librería Playwright y driver (requerido para automatización)
+    Write-Step "Instalando librería Playwright..."
+    python -m pip install playwright --quiet --no-warn-script-location
+    
+    Write-Step "Configurando driver de Playwright..."
+    python -m playwright install --with-deps chromium --quiet 2>$null
+    Write-Ok "Playwright instalado"
+    
+    # 4. Obtener última release
     Write-Step "Buscando última versión..."
     $release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
     $version = $release.tag_name
@@ -132,7 +140,7 @@ try {
     
     Write-Ok "Versión encontrada: $version"
     
-    # 4. Crear directorios necesarios
+    # 5. Crear directorios necesarios
     Write-Step "Preparando directorios..."
     
     # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
@@ -165,19 +173,19 @@ try {
     Write-Ok "Directorio del programa: $InstallDir"
     Write-Ok "Directorio de datos: $DataDir (persiste entre actualizaciones)"
     
-    # 5. Descargar (sin Chromium - solo exe + dependencias Python)
+    # 6. Descargar (sin Chromium - solo exe + dependencias Python)
     Write-Step "Descargando $AppName v$version ($([math]::Round($asset.size/1MB, 1)) MB)..."
     $zipPath = "$env:TEMP\$AppName.zip"
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing
     Write-Ok "Descarga completada"
     
-    # 6. Extraer
+    # 7. Extraer
     Write-Step "Extrayendo archivos..."
     Expand-Archive -Path $zipPath -DestinationPath $InstallDir -Force
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 7. Crear shortcuts
+    # 8. Crear shortcuts
     Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
     
@@ -199,7 +207,7 @@ try {
     $shortcutDesk.Save()
     Write-Ok "Acceso directo creado en Escritorio"
     
-    # 8. Resumen
+    # 9. Resumen
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "   INSTALACIÓN COMPLETADA" -ForegroundColor Green
