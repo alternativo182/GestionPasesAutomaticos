@@ -5,6 +5,12 @@ import sys
 from datetime import datetime
 from typing import TextIO
 
+# Configurar Playwright para usar los browsers del sistema
+# Esto evita que busque dentro del .exe bundeleado
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(
+    os.environ.get("LOCALAPPDATA", ""), "ms-playwright"
+)
+
 from playwright.sync_api import sync_playwright
 
 from exceptions import FormsError, OutlookError, ValidationError
