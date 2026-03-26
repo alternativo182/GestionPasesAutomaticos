@@ -119,10 +119,13 @@ try {
         Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
     }
     
-    # 3. Instalar librería Playwright (requerida para automatización)
+    # 3. Instalar librería Playwright y driver (requerido para automatización)
     Write-Step "Instalando librería Playwright..."
     python -m pip install playwright --quiet --no-warn-script-location
-    Write-Ok "Librería Playwright instalada"
+    
+    Write-Step "Configurando driver de Playwright..."
+    python -m playwright install chromium
+    Write-Ok "Playwright instalado"
     
     # 4. Obtener última release
     Write-Step "Buscando última versión..."
