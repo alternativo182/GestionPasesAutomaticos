@@ -64,70 +64,25 @@ try {
         Write-Ok "Python instalado"
     }
     
-    # 2. Verificar/Instalar browser Chromium (solo la primera vez)
-    # Buscar si ya existe algún chromium instalado
-    $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-    
-    if (-not $existingChrome) {
-        Write-Step "Primera instalación: configurando browser Chromium..."
-        Write-Warn "Esto descargará ~400MB solo la primera vez"
-        Write-Host "  Cache: $CacheDir" -ForegroundColor Gray
-        
-        # Crear directorios
-        New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
-        $tempDir = "$env:TEMP\GestionPases_browser"
-        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-        
-        # Descargar browser - usar la URL más reciente
-        Write-Step "Descargando Chromium (~400MB)..."
-        $browserUrl = "https://playwright.azureedge.net/builds/chromium/1155/chromium-win64.zip"
-        $browserZip = "$tempDir\chromium.zip"
-        Write-Host "  URL: $browserUrl" -ForegroundColor Gray
-        Write-Host "  Destino: $browserZip" -ForegroundColor Gray
-        
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $browserUrl -OutFile $browserZip -UseBasicParsing
-        $ProgressPreference = 'Continue'
-        
-        if (Test-Path $browserZip) {
-            $zipSize = [math]::Round((Get-Item $browserZip).Length / 1MB, 1)
-            Write-Ok "Descarga completada: ${zipSize}MB"
-            
-            # Extraer a carpeta de cache
-            Write-Step "Instalando browser en cache..."
-            Expand-Archive -Path $browserZip -DestinationPath $CacheDir -Force
-            Remove-Item $browserZip -Force
-            Write-Ok "Extracción completada"
-        } else {
-            Write-Error "El archivo ZIP no se descargó correctamente"
-        }
-        
-        # Limpiar
-        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
-        
-        # Verificar si se instaló
-        $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($existingChrome) {
-            Write-Ok "Browser instalado en: $($existingChrome.DirectoryName)"
-        } else {
-            Write-Warn "Browser no encontrado en: $CacheDir"
-            Write-Host "  Contenido de cache:" -ForegroundColor Gray
-            Get-ChildItem $CacheDir -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "    $($_.FullName)" -ForegroundColor Gray }
-        }
-    } else {
-        Write-Ok "Browser Chromium ya instalado en cache"
-        Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
-    }
-    
-    # 3. Instalar librería Playwright y driver (requerido para automatización)
+    # 2. Instalar librería Playwright y browser (solo la primera vez)
+    # El browser se descarga en %LOCALAPPDATA%\ms-playwright\
     Write-Step "Instalando librería Playwright..."
     python -m pip install playwright --quiet --no-warn-script-location
     
-    Write-Step "Configurando driver de Playwright..."
-    python -m playwright install chromium
-    Write-Ok "Playwright instalado"
+    # Verificar si ya existe Chromium en la carpeta de Playwright
+    $playwrightBrowserPath = "$env:LOCALAPPDATA\ms-playwright"
+    $existingChrome = Get-ChildItem -Path $playwrightBrowserPath -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
     
-    # 4. Obtener última release
+    if (-not $existingChrome) {
+        Write-Step "Configurando browser Chromium (~400MB)..."
+        python -m playwright install chromium
+        Write-Ok "Browser Chromium instalado"
+    } else {
+        Write-Ok "Browser Chromium ya instalado"
+        Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
+    }
+    
+    # 3. Obtener última release
     Write-Step "Buscando última versión..."
     $release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
     $version = $release.tag_name
@@ -140,7 +95,7 @@ try {
     
     Write-Ok "Versión encontrada: $version"
     
-    # 5. Crear directorios necesarios
+    # 4. Crear directorios necesarios
     Write-Step "Preparando directorios..."
     
     # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
@@ -173,19 +128,19 @@ try {
     Write-Ok "Directorio del programa: $InstallDir"
     Write-Ok "Directorio de datos: $DataDir (persiste entre actualizaciones)"
     
-    # 6. Descargar (sin Chromium - solo exe + dependencias Python)
+    # 5. Descargar (sin Chromium - solo exe + dependencias Python)
     Write-Step "Descargando $AppName v$version ($([math]::Round($asset.size/1MB, 1)) MB)..."
     $zipPath = "$env:TEMP\$AppName.zip"
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing
     Write-Ok "Descarga completada"
     
-    # 7. Extraer
+    # 6. Extraer
     Write-Step "Extrayendo archivos..."
     Expand-Archive -Path $zipPath -DestinationPath $InstallDir -Force
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 8. Crear shortcuts
+    # 7. Crear shortcuts
     Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
     
@@ -207,7 +162,8 @@ try {
     $shortcutDesk.Save()
     Write-Ok "Acceso directo creado en Escritorio"
     
-    # 9. Resumen
+    # 8. Resumen
+    $browserPath = "$env:LOCALAPPDATA\ms-playwright"
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "   INSTALACIÓN COMPLETADA" -ForegroundColor Green
@@ -216,13 +172,12 @@ try {
     Write-Host "  Versión:     $version"
     Write-Host "  Ejecutable:  $InstallDir\$AppName\GestionPases.exe"
     Write-Host "  Datos:       $DataDir (PERSISTE entre actualizaciones)"
-    Write-Host "  Browser:     $CacheDir (cache local)"
+    Write-Host "  Browser:     $browserPath"
     Write-Host ""
     Write-Host "  Estructura de carpetas:"
     Write-Host "    $BaseDir\"
     Write-Host "    ├── app\       ← Se actualiza con cada release"
-    Write-Host "    ├── data\      ← Tus configuraciones (se conservan)"
-    Write-Host "    └── cache\     ← Browser Chromium"
+    Write-Host "    └── data\      ← Tus configuraciones (se conservan)"
     Write-Host ""
     Write-Host "  Puedes ejecutarlo desde:"
     Write-Host "  - El acceso directo en Menú Inicio/Escritorio"
