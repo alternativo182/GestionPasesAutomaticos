@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 
 # Versión actual de la aplicación
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 # Repo de GitHub
 GITHUB_REPO = "alternativo182/GestionPasesAutomaticos"
