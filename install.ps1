@@ -29,7 +29,35 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 try {
-    # 1. Verificar/Instalar browser Chromium (solo la primera vez)
+    # 1. Verificar/Instalar Python (solo la primera vez)
+    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $pythonCmd) {
+        Write-Step "Primera instalación: instalando Python..."
+        Write-Warn "Esto descargará ~30MB solo la primera vez"
+        
+        $tempDir = "$env:TEMP\GestionPases_install"
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+        
+        # Descargar Python
+        Write-Step "Descargando Python..."
+        $pythonUrl = "https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe"
+        $pythonInstaller = "$tempDir\python.exe"
+        Invoke-WebRequest -Uri $pythonUrl -OutFile $pythonInstaller -UseBasicParsing -TimeoutSec 300
+        
+        # Instalar silenciosamente
+        Write-Step "Instalando Python..."
+        Start-Process -FilePath $pythonInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait
+        
+        # Recargar PATH
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        
+        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Ok "Python instalado"
+    } else {
+        Write-Ok "Python ya instalado: $(python --version)"
+    }
+    
+    # 2. Verificar/Instalar browser Chromium (solo la primera vez)
     # Buscar si ya existe algún chromium instalado
     $existingChrome = Get-ChildItem -Path $CacheDir -Recurse -Filter "chrome.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
     
@@ -84,12 +112,12 @@ try {
         Write-Host "  Ubicación: $($existingChrome.FullName)" -ForegroundColor Gray
     }
     
-    # 2. Instalar librería Playwright (requerida para automatización)
+    # 3. Instalar librería Playwright (requerida para automatización)
     Write-Step "Instalando librería Playwright..."
     python -m pip install playwright --quiet
     Write-Ok "Librería Playwright instalada"
     
-    # 3. Obtener última release
+    # 4. Obtener última release
     Write-Step "Buscando última versión..."
     $release = Invoke-RestMethod "https://api.github.com/repos/$Repo/releases/latest"
     $version = $release.tag_name
@@ -102,7 +130,7 @@ try {
     
     Write-Ok "Versión encontrada: $version"
     
-    # 4. Crear directorios necesarios
+    # 5. Crear directorios necesarios
     Write-Step "Preparando directorios..."
     
     # Esperar a que el proceso GestionPases.exe se cierre si está ejecutándose
@@ -135,19 +163,19 @@ try {
     Write-Ok "Directorio del programa: $InstallDir"
     Write-Ok "Directorio de datos: $DataDir (persiste entre actualizaciones)"
     
-    # 5. Descargar (sin Chromium - solo exe + dependencias Python)
+    # 6. Descargar (sin Chromium - solo exe + dependencias Python)
     Write-Step "Descargando $AppName v$version ($([math]::Round($asset.size/1MB, 1)) MB)..."
     $zipPath = "$env:TEMP\$AppName.zip"
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing
     Write-Ok "Descarga completada"
     
-    # 6. Extraer
+    # 7. Extraer
     Write-Step "Extrayendo archivos..."
     Expand-Archive -Path $zipPath -DestinationPath $InstallDir -Force
     Remove-Item $zipPath -Force
     Write-Ok "Archivos extraídos"
     
-    # 7. Crear shortcuts
+    # 8. Crear shortcuts
     Write-Step "Creando accesos directos..."
     $WshShell = New-Object -ComObject WScript.Shell
     
@@ -169,7 +197,7 @@ try {
     $shortcutDesk.Save()
     Write-Ok "Acceso directo creado en Escritorio"
     
-    # 8. Resumen
+    # 9. Resumen
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "   INSTALACIÓN COMPLETADA" -ForegroundColor Green
