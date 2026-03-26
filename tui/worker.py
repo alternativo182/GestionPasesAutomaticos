@@ -1,9 +1,15 @@
 """Worker para ejecutar el núcleo de automatización en un hilo separado."""
+
 from __future__ import annotations
 
 import os
 from datetime import datetime
 from typing import Callable, TextIO
+
+# Configurar Playwright para usar los browsers del sistema
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(
+    os.environ.get("LOCALAPPDATA", ""), "ms-playwright"
+)
 
 from playwright.sync_api import sync_playwright
 
@@ -44,15 +50,21 @@ def ejecutar_pase_worker(
         callback_progreso(mensaje)
 
     errores: list[str] = []
-    user_data_dir = os.path.join(os.path.expanduser("~"), ".automatizacion_pases_profile")
+    user_data_dir = os.path.join(
+        os.path.expanduser("~"), ".automatizacion_pases_profile"
+    )
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch_persistent_context(user_data_dir, headless=False)
+            browser = p.chromium.launch_persistent_context(
+                user_data_dir, headless=False
+            )
             page = browser.new_page()
             try:
                 # Paso 1 — Login en Forms
-                _progreso("Abriendo Microsoft Forms... Si pide login, complete el MFA (tiene hasta 5 minutos).")
+                _progreso(
+                    "Abriendo Microsoft Forms... Si pide login, complete el MFA (tiene hasta 5 minutos)."
+                )
                 esperar_login_forms(page, pase.forms_url)
                 _progreso("✓ Login en Forms completado")
 
@@ -72,11 +84,19 @@ def ejecutar_pase_worker(
                     total = len(pase.artefactos)
                     for i, artefacto in enumerate(pase.artefactos, 1):
                         try:
-                            _progreso(f"⏳ Formulario DevOps {i}/{total} ({artefacto.codigo}) — revisá y hacé clic en Enviar")
-                            completar_formulario_devops(page, pase.forms_url, pase, artefacto, artefactos_idx)
-                            _progreso(f"✓ Formulario DevOps {i}/{total} enviado ({artefacto.codigo})")
+                            _progreso(
+                                f"⏳ Formulario DevOps {i}/{total} ({artefacto.codigo}) — revisá y hacé clic en Enviar"
+                            )
+                            completar_formulario_devops(
+                                page, pase.forms_url, pase, artefacto, artefactos_idx
+                            )
+                            _progreso(
+                                f"✓ Formulario DevOps {i}/{total} enviado ({artefacto.codigo})"
+                            )
                         except FormsError as e:
-                            _progreso(f"✗ Error en formulario DevOps ({artefacto.codigo}): {e}")
+                            _progreso(
+                                f"✗ Error en formulario DevOps ({artefacto.codigo}): {e}"
+                            )
                             errores.append(str(e))
 
                 # Paso 5 — Formulario Manual
