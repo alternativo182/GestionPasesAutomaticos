@@ -124,7 +124,7 @@ try {
     python -m pip install playwright --quiet --no-warn-script-location
     
     Write-Step "Configurando driver de Playwright..."
-    python -m playwright install --with-deps chromium --quiet 2>$null
+    python -m playwright install chromium
     Write-Ok "Playwright instalado"
     
     # 4. Obtener última release
